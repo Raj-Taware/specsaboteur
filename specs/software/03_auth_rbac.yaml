@@ -1,0 +1,43 @@
+domain: auth
+language: python
+intent: >
+  Role-based access control system. Admin users can create/delete users.
+  Regular users can only view their own profile. Authentication tokens must
+  be valid and not expired. Failed login attempts must be rate-limited.
+
+spec: |
+  Authentication:
+    - POST /login: accepts username + password, returns JWT token
+    - Token contains: user_id, role, issued_at
+    - Token must be present in Authorization header for protected routes
+  Authorization:
+    - Role "admin": can access GET/POST/DELETE /users/*
+    - Role "user": can access GET /users/{self_id} only
+  Endpoints:
+    - GET /users/{id}: returns user profile
+    - POST /users: creates new user (admin only)
+    - DELETE /users/{id}: deletes user (admin only)
+
+test_cases:
+  - name: "admin can delete users"
+    setup: "admin token, target user exists"
+    input: "DELETE /users/123 with admin token"
+    expected: "user 123 deleted, returns 200"
+  - name: "regular user cannot delete"
+    setup: "regular user token"
+    input: "DELETE /users/123 with user token"
+    expected: "returns 403 Forbidden"
+  - name: "expired token rejected"
+    setup: "token issued 25 hours ago, expiry is 24h"
+    input: "GET /users/me with expired token"
+    expected: "returns 401"
+  - name: "brute force blocked"
+    setup: "5 failed login attempts in last minute"
+    input: "POST /login with wrong password"
+    expected: "returns 429 Too Many Requests"
+
+known_gap: >
+  Spec says token must be "present" but doesn't specify validation (signature check,
+  expiry check). Adversarial impl can accept ANY string as valid token.
+  No rate limiting requirement in spec. No password hashing requirement.
+  No spec for token revocation after password change.

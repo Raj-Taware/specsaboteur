@@ -1,0 +1,36 @@
+domain: smart_contract
+language: solidity
+intent: >
+  ERC-20 token transfer function. Transfers tokens from sender to recipient.
+  Must decrease sender balance, increase recipient balance, emit Transfer event.
+  Must prevent transfers exceeding sender balance. Must be safe against reentrancy.
+
+spec: |
+  function transfer(address to, uint256 amount) public returns (bool)
+  Requirements:
+    - msg.sender must have balance >= amount
+    - to must not be zero address
+  Effects:
+    - balances[msg.sender] decreases by amount
+    - balances[to] increases by amount
+    - emits Transfer(msg.sender, to, amount)
+    - returns true on success
+
+test_cases:
+  - name: "basic transfer works"
+    setup: "sender has 100 tokens, recipient has 0"
+    input: "transfer(recipient, 50)"
+    expected: "sender has 50, recipient has 50"
+  - name: "insufficient balance reverts"
+    setup: "sender has 10 tokens"
+    input: "transfer(recipient, 100)"
+    expected: "transaction reverts"
+  - name: "reentrancy attack blocked"
+    setup: "malicious contract calls transfer in receive callback"
+    input: "transfer(malicious_contract, 50)"
+    expected: "only one transfer executes, no double-spend"
+
+known_gap: >
+  Spec says balances change but doesn't specify ORDER of operations (check-effect-interaction).
+  No reentrancy guard requirement. Adversarial impl can update balance AFTER external call,
+  enabling reentrancy attack. Also: no requirement for totalSupply invariance.

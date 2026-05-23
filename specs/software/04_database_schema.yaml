@@ -1,0 +1,41 @@
+domain: database
+language: sql
+intent: >
+  User registration system. Each user has unique email, hashed password,
+  created_at timestamp. Email must be case-insensitive unique (no two users
+  with same email differing only by case). Passwords must never be stored
+  in plaintext.
+
+spec: |
+  Table: users
+    - id: INTEGER PRIMARY KEY AUTOINCREMENT
+    - email: VARCHAR(255) UNIQUE NOT NULL
+    - password: VARCHAR(255) NOT NULL
+    - created_at: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+  Insert operation:
+    - INSERT INTO users (email, password) VALUES (?, ?)
+    - Returns the created user id
+    - Fails if email already exists (UNIQUE constraint)
+
+test_cases:
+  - name: "basic user creation"
+    input: "INSERT user with email='test@example.com', password='hashed_pw'"
+    expected: "user created with auto-generated id"
+  - name: "duplicate email rejected"
+    setup: "user with test@example.com exists"
+    input: "INSERT user with email='test@example.com'"
+    expected: "UNIQUE constraint violation"
+  - name: "case-insensitive duplicate rejected"
+    setup: "user with test@example.com exists"
+    input: "INSERT user with email='Test@Example.COM'"
+    expected: "rejected as duplicate"
+  - name: "password not stored plaintext"
+    input: "INSERT user with password='mypassword123'"
+    expected: "stored value is hashed, not 'mypassword123'"
+
+known_gap: >
+  UNIQUE constraint on email is case-SENSITIVE in most databases (SQLite, PostgreSQL
+  without citext). 'test@example.com' and 'Test@Example.com' are different values.
+  Adversarial impl satisfies UNIQUE constraint but allows case-variant duplicates.
+  Also: no spec requires password hashing — storing plaintext satisfies VARCHAR constraint.
