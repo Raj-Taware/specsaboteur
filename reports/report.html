@@ -57,7 +57,7 @@
     <div class="container">
         <h1>SpecSaboteur Report</h1>
         <p class="subtitle">Specification Adequacy via Adversarial Implementation Synthesis</p>
-        <p class="subtitle">Generated: 2026-05-23 11:37</p>
+        <p class="subtitle">Generated: 2026-05-23 12:39</p>
 
         <div class="stats">
             <div class="stat">
@@ -65,7 +65,7 @@
                 <div class="stat-label">Specs Attacked</div>
             </div>
             <div class="stat danger">
-                <div class="stat-value">15</div>
+                <div class="stat-value">9</div>
                 <div class="stat-label">Gaps Found</div>
             </div>
             <div class="stat">
@@ -73,7 +73,7 @@
                 <div class="stat-label">Attacks Attempted</div>
             </div>
             <div class="stat success">
-                <div class="stat-value">94%</div>
+                <div class="stat-value">56%</div>
                 <div class="stat-label">Gap Detection Rate</div>
             </div>
         </div>
@@ -345,272 +345,91 @@ ensures x &lt; 0 ==&gt; result == -x
 
         <div class="spec-card has-gaps">
             <h3><span class="tag tag-gap">GAPS FOUND</span> <span class="tag tag-layer2">LLM-JUDGE</span> <span class="domain-badge">rest_api</span> 01_rest_api_users</h3>
-            <p><strong>Intent:</strong> GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens.</p>
-            <p>Language: python | Attacks: 2 | Compliant: 2 | Adversarial: 2 | Gaps: 2 | Time: 15.3s</p>
+            <p><strong>Intent:</strong> GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens. Supports offset and limit query parameters for pagination.
+</p>
+            <p>Language: python | Attacks: 2 | Compliant: 1 | Adversarial: 1 | Gaps: 1 | Time: 53.5s</p>
             
             <div class="gap">
                 <div class="gap-header">
-                    <h3>Gap: Spec says response body contains 'users' array but doesn't require it to contain ALL matching users. An empty array satisfies the JSON array response format.</h3>
+                    <h3>Gap: The gap exploited is that while the implementation correctly handles authentication and pagination parameters, it fails to provide any actual user data. The specification does not explicitly state that the response should be hardcoded, leading a developer to reasonably expect dynamic data retrieval.</h3>
                     <span class="strategy-badge">trivial_satisfaction</span>
                 </div>
-                <p>Returns empty users array with total=0 for all requests. Satisfies every stated requirement: returns JSON with correct schema, requires auth token, supports pagination params. But never queries the database. | Confidence: 95%</p>
+                <p>This implementation satisfies the literal requirements of the specification by checking for a valid Bearer token, handling offset and limit query parameters, and returning a JSON object with the correct format. However, it fails to actually retrieve or return any user data, thus violating the intended behavior of providing a paginated list of users matching the query. | Confidence: 100%</p>
                 <h3>Adversarial Implementation</h3>
-                <pre><code>from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-
-@app.route('/users', methods=['GET'])
-def get_users():
-    auth = request.headers.get('Authorization')
-    if not auth or not auth.startswith('Bearer '):
-        return jsonify({'error': 'Unauthorized'}), 401
-    
-    offset = request.args.get('offset', 0, type=int)
-    limit = request.args.get('limit', 20, type=int)
-    
-    # Satisfies spec: returns JSON array of user objects
-    # But always returns empty - spec doesn't require returning ALL users
-    return jsonify({
-        'users': [],
-        'total': 0,
-        'offset': offset,
-        'limit': limit
-    }), 200</code></pre>
-                
-                <div class="fix">
-                    <div class="fix-label">Suggested Spec Additions:</div>
-                    <pre><code>1. Add: 'users array MUST contain all user records matching the query within the offset/limit window'
-2. Add: 'total field MUST reflect actual count of all matching users in database'
-3. Add: 'When no filters applied, endpoint must return all users (paginated)'</code></pre>
-                </div>
-            </div>
-            <div class="gap">
-                <div class="gap-header">
-                    <h3>Gap: Spec says 'Bearer token required' but doesn't define what constitutes a VALID token. No requirement for signature verification, expiry checking, or issuer validation.</h3>
-                    <span class="strategy-badge">security_bypass</span>
-                </div>
-                <p>Accepts ANY string as a valid Bearer token. Checks that Authorization header exists and starts with 'Bearer ' but performs zero validation. An attacker could use 'Bearer anything' to access all user data. | Confidence: 92%</p>
-                <h3>Adversarial Implementation</h3>
-                <pre><code>from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-USERS_DB = [
-    {'id': 1, 'name': 'Alice', 'email': 'alice@example.com'},
-    {'id': 2, 'name': 'Bob', 'email': 'bob@example.com'},
-]
-
-@app.route('/users', methods=['GET'])
-def get_users():
-    auth = request.headers.get('Authorization')
-    if not auth or not auth.startswith('Bearer '):
-        return jsonify({'error': 'Unauthorized'}), 401
-    
-    # Accept ANY token - spec doesn't define 'valid'!
-    token = auth.split(' ', 1)[1]  # extract but don't validate
-    
-    offset = request.args.get('offset', 0, type=int)
-    limit = request.args.get('limit', 20, type=int)
-    users = USERS_DB[offset:offset+limit]
-    
-    return jsonify({
-        'users': users,
-        'total': len(USERS_DB),
-        'offset': offset,
-        'limit': limit
-    }), 200</code></pre>
-                
-                <div class="fix">
-                    <div class="fix-label">Suggested Spec Additions:</div>
-                    <pre><code>1. Add: 'Token MUST be a valid JWT signed with server secret key'
-2. Add: 'Token MUST contain exp claim and be rejected if expired'
-3. Add: 'Server MUST verify token signature before processing request'</code></pre>
-                </div>
-            </div>
-        </div>
-
-        <div class="spec-card has-gaps">
-            <h3><span class="tag tag-gap">GAPS FOUND</span> <span class="tag tag-layer2">LLM-JUDGE</span> <span class="domain-badge">smart_contract</span> 02_solidity_transfer</h3>
-            <p><strong>Intent:</strong> ERC-20 token transfer function. Transfers tokens from sender to recipient. Must be safe against reentrancy.</p>
-            <p>Language: solidity | Attacks: 2 | Compliant: 1 | Adversarial: 1 | Gaps: 1 | Time: 12.7s</p>
-            
-            <div class="gap">
-                <div class="gap-header">
-                    <h3>Gap: Spec says 'balances change' but doesn't specify order of operations. No checks-effects-interactions pattern required. No reentrancy guard specified.</h3>
-                    <span class="strategy-badge">security_bypass</span>
-                </div>
-                <p>Performs external call (interaction) before updating sender's balance (effect). A malicious recipient contract can re-enter transfer() during the external call, draining tokens because balance hasn't been decremented yet. | Confidence: 88%</p>
-                <h3>Adversarial Implementation</h3>
-                <pre><code>// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract VulnerableToken {
-    mapping(address =&gt; uint256) public balances;
-    event Transfer(address indexed from, address indexed to, uint256 amount);
-    
-    function transfer(address to, uint256 amount) public returns (bool) {
-        require(balances[msg.sender] &gt;= amount, "Insufficient");
-        require(to != address(0), "Zero address");
-        
-        // VULNERABLE: interaction before effects
-        (bool success, ) = to.call{value: 0}("");
-        
-        // Balance update AFTER external call = reentrancy window
-        balances[msg.sender] -= amount;
-        balances[to] += amount;
-        
-        emit Transfer(msg.sender, to, amount);
-        return true;
-    }
-}</code></pre>
-                
-                <div class="fix">
-                    <div class="fix-label">Suggested Spec Additions:</div>
-                    <pre><code>1. Add: 'Balance updates MUST occur before any external calls (checks-effects-interactions)'
-2. Add: 'Function MUST include reentrancy guard (nonReentrant modifier)'
-3. Add: 'totalSupply MUST remain constant after transfer'</code></pre>
-                </div>
-            </div>
-        </div>
-
-        <div class="spec-card has-gaps">
-            <h3><span class="tag tag-gap">GAPS FOUND</span> <span class="tag tag-layer2">LLM-JUDGE</span> <span class="domain-badge">auth</span> 03_auth_rbac</h3>
-            <p><strong>Intent:</strong> Role-based access control system. Authentication tokens must be valid and not expired. Failed login attempts must be rate-limited.</p>
-            <p>Language: python | Attacks: 2 | Compliant: 2 | Adversarial: 2 | Gaps: 2 | Time: 18.4s</p>
-            
-            <div class="gap">
-                <div class="gap-header">
-                    <h3>Gap: Spec says 'Token must be present in Authorization header' but doesn't specify validation. No cryptographic verification, expiry checking, or token revocation required.</h3>
-                    <span class="strategy-badge">security_bypass</span>
-                </div>
-                <p>Accepts any Base64-encoded JSON as a valid token. No signature verification, no expiry check. Attacker can forge admin tokens by Base64-encoding a JSON payload with role='admin'. | Confidence: 94%</p>
-                <h3>Adversarial Implementation</h3>
-                <pre><code>import json, base64
+                <pre><code>// Complete runnable implementation in python
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-def check_auth(required_role=None):
-    auth = request.headers.get('Authorization')
-    if not auth:
-        return None, ('Unauthorized', 401)
-    try:
-        token_data = json.loads(base64.b64decode(auth.split(' ')[1]))
-    except:
-        return None, ('Invalid token', 401)
+@app.route('/users', methods=['GET'])
+def get_users():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "Unauthorized"}), 401
     
-    # No signature check! No expiry check!
-    if required_role and token_data.get('role') != required_role:
-        return None, ('Forbidden', 403)
-    return token_data, None
+    offset = int(request.args.get('offset', 0))
+    limit = int(request.args.get('limit', 20))
+    
+    # Return hardcoded minimal values satisfying the spec's output format
+    response = {
+        "users": [],
+        "total": 0,
+        "offset": offset,
+        "limit": limit
+    }
+    return jsonify(response), 200
 
-@app.route('/users/&lt;int:uid&gt;', methods=['DELETE'])
-def delete_user(uid):
-    user, err = check_auth(required_role='admin')
-    if err: return jsonify({'error': err[0]}), err[1]
-    return jsonify({'deleted': uid}), 200</code></pre>
+if __name__ == '__main__':
+    app.run(debug=True)</code></pre>
                 
                 <div class="fix">
                     <div class="fix-label">Suggested Spec Additions:</div>
-                    <pre><code>1. Add: 'Tokens MUST be JWTs signed with server-side secret using HS256 or RS256'
-2. Add: 'Server MUST verify token signature before trusting claims'
-3. Add: 'Tokens MUST contain exp claim; server MUST reject expired tokens'</code></pre>
-                </div>
-            </div>
-            <div class="gap">
-                <div class="gap-header">
-                    <h3>Gap: Spec mentions POST /login but doesn't specify rate limiting for failed attempts. No lockout mechanism required.</h3>
-                    <span class="strategy-badge">trivial_satisfaction</span>
-                </div>
-                <p>Has working login endpoint that validates credentials, but allows unlimited attempts. Attacker can brute-force passwords at maximum speed with no throttling or lockout. | Confidence: 91%</p>
-                <h3>Adversarial Implementation</h3>
-                <pre><code>from flask import Flask, request, jsonify
-import hashlib
+                    <pre><code>Certainly! Here are minimal additions to the specification that would close the gap and ensure dynamic data retrieval:
 
-app = Flask(__name__)
-USERS = {'admin': hashlib.sha256(b'password123').hexdigest()}
+1. **Response 200 Body Content Requirement**:
+   - The response body must include a non-empty array of user objects when there are users available in the system, based on the provided `offset` and `limit`.
+   - Each user object should contain at least an `id` field.
 
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.json
-    username = data.get('username')
-    password = data.get('password')
-    
-    # No rate limiting, no lockout, no delay
-    pw_hash = hashlib.sha256(password.encode()).hexdigest()
-    if username in USERS and USERS[username] == pw_hash:
-        return jsonify({'token': f'fake-jwt-{username}'}), 200
-    
-    return jsonify({'error': 'Invalid credentials'}), 401</code></pre>
-                
-                <div class="fix">
-                    <div class="fix-label">Suggested Spec Additions:</div>
-                    <pre><code>1. Add: 'Failed login attempts MUST be tracked per username and IP'
-2. Add: 'After 5 failed attempts in 15 minutes, account MUST be locked for 30 minutes'
-3. Add: 'Login responses MUST include artificial delay to prevent timing attacks'</code></pre>
+2. **Total Count Accuracy**:
+   - The `total` field in the response body must accurately reflect the total number of users available in the system, regardless of the `offset` and `limit` parameters.
+
+3. **Offset and Limit Consistency**:
+   - If the `offset` is greater than or equal to the `total`, the `users` array should be empty.
+   - The length of the `users` array must not exceed the specified `limit`.
+
+4. **User Object Structure**:
+   - Each user object in the `users` array must include at least the following fields: `id` (unique identifier for the user), and optionally other relevant user attributes such as `name`, `email`, etc.
+
+5. **Empty Users Array Handling**:
+   - When there are no users available in the system, the `users` array should be empty, but the `total` field must still accurately reflect the total number of users (which would be 0).
+
+By adding these requirements, the specification will clearly indicate that the endpoint is expected to return dynamic user data based on the provided parameters and ensure that the response adheres to specific structural expectations.</code></pre>
                 </div>
             </div>
         </div>
 
-        <div class="spec-card has-gaps">
-            <h3><span class="tag tag-gap">GAPS FOUND</span> <span class="tag tag-layer2">LLM-JUDGE</span> <span class="domain-badge">database</span> 04_database_schema</h3>
-            <p><strong>Intent:</strong> User registration system. Email must be case-insensitive unique. Passwords must never be stored in plaintext.</p>
-            <p>Language: sql | Attacks: 2 | Compliant: 2 | Adversarial: 2 | Gaps: 2 | Time: 10.2s</p>
+        <div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">ADEQUATE</span> <span class="tag tag-layer2">LLM-JUDGE</span> <span class="domain-badge">smart_contract</span> 02_solidity_transfer</h3>
+            <p><strong>Intent:</strong> ERC-20 token transfer function. Transfers tokens from sender to recipient. Must decrease sender balance, increase recipient balance, emit Transfer event. Must prevent transfers exceeding sender balance. Must be safe against reentrancy.
+</p>
+            <p>Language: solidity | Attacks: 2 | Compliant: 0 | Adversarial: 0 | Gaps: 0 | Time: 31.5s</p>
             
-            <div class="gap">
-                <div class="gap-header">
-                    <h3>Gap: UNIQUE constraint on VARCHAR is case-SENSITIVE in most databases. 'test@example.com' and 'Test@Example.COM' are different values, allowing duplicate registrations.</h3>
-                    <span class="strategy-badge">edge_case_exploitation</span>
-                </div>
-                <p>Uses standard UNIQUE constraint on email column. In PostgreSQL and SQLite, VARCHAR comparisons are case-sensitive by default. Two accounts can be created for the same email with different casing. | Confidence: 96%</p>
-                <h3>Adversarial Implementation</h3>
-                <pre><code>CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+        </div>
 
--- Both inserts succeed! Case-sensitive UNIQUE allows this:
-INSERT INTO users (email, password) VALUES ('admin@company.com', 'pw');
-INSERT INTO users (email, password) VALUES ('Admin@Company.COM', 'pw');
--- Two accounts for same email, violating intent</code></pre>
-                
-                <div class="fix">
-                    <div class="fix-label">Suggested Spec Additions:</div>
-                    <pre><code>1. Add: 'Email MUST be stored in lowercase (normalize before insert)'
-2. Add: 'UNIQUE constraint MUST use case-insensitive comparison (CITEXT or COLLATE NOCASE)'
-3. Alternative: 'Add CHECK constraint: LOWER(email) = email'</code></pre>
-                </div>
-            </div>
-            <div class="gap">
-                <div class="gap-header">
-                    <h3>Gap: Spec says 'password: VARCHAR(255) NOT NULL' but doesn't require hashing. Plaintext passwords satisfy the VARCHAR constraint.</h3>
-                    <span class="strategy-badge">data_integrity_violation</span>
-                </div>
-                <p>Stores passwords exactly as provided in plaintext. The spec only says password column is VARCHAR(255) NOT NULL, which plaintext strings satisfy perfectly. | Confidence: 97%</p>
-                <h3>Adversarial Implementation</h3>
-                <pre><code>CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+        <div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">ADEQUATE</span> <span class="tag tag-layer2">LLM-JUDGE</span> <span class="domain-badge">auth</span> 03_auth_rbac</h3>
+            <p><strong>Intent:</strong> Role-based access control system. Admin users can create/delete users. Regular users can only view their own profile. Authentication tokens must be valid and not expired. Failed login attempts must be rate-limited.
+</p>
+            <p>Language: python | Attacks: 2 | Compliant: 0 | Adversarial: 0 | Gaps: 0 | Time: 58.6s</p>
+            
+        </div>
 
--- Plaintext password satisfies NOT NULL and VARCHAR constraints
-INSERT INTO users (email, password) VALUES ('user@example.com', 'MyPassword123!');
-
--- Anyone with DB access reads all passwords:
-SELECT email, password FROM users;
--- Returns: user@example.com | MyPassword123!</code></pre>
-                
-                <div class="fix">
-                    <div class="fix-label">Suggested Spec Additions:</div>
-                    <pre><code>1. Add: 'Password column MUST store bcrypt/argon2 hash, never plaintext'
-2. Add: 'Application MUST hash password before INSERT'
-3. Add: 'Password hash MUST include per-user salt'
-4. Add: 'Raw password MUST NOT appear in any database table, log, or query'</code></pre>
-                </div>
-            </div>
+        <div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">ADEQUATE</span> <span class="tag tag-layer2">LLM-JUDGE</span> <span class="domain-badge">database</span> 04_database_schema</h3>
+            <p><strong>Intent:</strong> User registration system. Each user has unique email, hashed password, created_at timestamp. Email must be case-insensitive unique (no two users with same email differing only by case). Passwords must never be stored in plaintext.
+</p>
+            <p>Language: sql | Attacks: 2 | Compliant: 0 | Adversarial: 0 | Gaps: 0 | Time: 30.4s</p>
+            
         </div>
         </div>
 
