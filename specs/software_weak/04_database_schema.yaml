@@ -1,0 +1,30 @@
+domain: database
+language: sql
+intent: >
+  User registration system. Each user has unique email, hashed password,
+  created_at timestamp. Email must be case-insensitive unique. Passwords
+  must never be stored in plaintext.
+
+spec: |
+  Table: users
+    - id: INTEGER PRIMARY KEY
+    - email: VARCHAR(255) UNIQUE NOT NULL
+    - password: VARCHAR(255) NOT NULL
+    - created_at: TIMESTAMP
+
+# DELIBERATELY WEAK: spec doesn't say...
+# - UNIQUE is case-sensitive in most DBs (Test@x.com != test@x.com)
+# - password must be hashed (plaintext satisfies VARCHAR NOT NULL)
+# - created_at must have DEFAULT
+# - AUTOINCREMENT on id
+
+test_cases:
+  - name: "case-insensitive unique"
+    setup: "user with test@example.com exists"
+    input: "INSERT Test@Example.COM"
+    expected: "rejected as duplicate"
+
+known_gap: >
+  UNIQUE on VARCHAR is case-sensitive. Two accounts with same email
+  different case both allowed. Password stored as plaintext satisfies
+  VARCHAR NOT NULL constraint.

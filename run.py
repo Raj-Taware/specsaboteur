@@ -93,7 +93,7 @@ def run_layer2(args, llm):
     print(f"{'='*60}")
 
     saboteur = SoftwareSaboteur(llm_client=llm)
-    specs_dir = args.software_specs or "specs/software"
+    specs_dir = args.software_specs or "specs/software_weak"
     results = saboteur.attack_all(specs_dir)
 
     if results:

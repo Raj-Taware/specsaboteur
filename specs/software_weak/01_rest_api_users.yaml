@@ -1,0 +1,28 @@
+domain: rest_api
+language: python
+intent: >
+  GET /users endpoint returns a paginated list of ALL users matching the query.
+  Requires valid Bearer auth token. Returns 401 for invalid/missing tokens.
+  Supports offset and limit query parameters for pagination.
+
+spec: |
+  Endpoint: GET /users
+  Authentication: Bearer token in Authorization header
+  Response 200: JSON object with "users" array
+  Response 401: When no token provided
+
+# DELIBERATELY WEAK: spec doesn't say...
+# - users array must contain ACTUAL users (empty satisfies it)
+# - what "valid" token means (any string works)
+# - total/offset/limit must be accurate
+# - users must match any query
+
+test_cases:
+  - name: "returns users with valid token"
+    setup: "database has 5 users"
+    input: "GET /users with valid token"
+    expected: "returns all 5 users"
+
+known_gap: >
+  Spec says "JSON object with users array" - empty array satisfies this.
+  Spec says "Bearer token in Authorization header" - any string after Bearer works.

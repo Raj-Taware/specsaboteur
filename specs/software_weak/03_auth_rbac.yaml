@@ -1,0 +1,29 @@
+domain: auth
+language: python
+intent: >
+  Role-based access control system. Admin users can create/delete users.
+  Regular users can only view their own profile. Authentication tokens must
+  be valid and not expired. Failed login attempts must be rate-limited.
+
+spec: |
+  POST /login: accepts username and password, returns token
+  Protected routes require token in header
+  Admin role: can access all user endpoints
+  User role: can view own profile only
+
+# DELIBERATELY WEAK: spec doesn't say...
+# - token format (JWT? opaque? anything?)
+# - how to validate tokens (signature? expiry?)
+# - rate limiting on failed logins
+# - password hashing requirement
+# - token revocation after password change
+
+test_cases:
+  - name: "admin can delete"
+    input: "DELETE /users/123 with admin token"
+    expected: "user deleted"
+
+known_gap: >
+  Spec says "requires token in header" but not what makes token valid.
+  Any string satisfies "token in header". No expiry, no signature check.
+  No rate limiting mentioned at all.
