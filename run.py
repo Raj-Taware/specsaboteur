@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SpecSaboteur CLI — run adversarial spec validation."""
+"""SpecSaboteur CLI -- run adversarial spec validation."""
 
 import argparse
 import glob
@@ -103,7 +103,7 @@ def run_layer2(args, llm):
 
 
 def run_refine(args, llm):
-    """Iterative refinement: attack → fix → re-attack → converge."""
+    """Iterative refinement: attack -> fix -> re-attack -> converge."""
     from src.refinement import IterativeRefiner, save_refinement_results
 
     if not args.specs:
@@ -164,7 +164,7 @@ def run_sampling(args, llm):
         tier = "strong"
 
     print(f"\n{'='*60}")
-    print(f"STATISTICAL SAMPLING — {tier} tier")
+    print(f"STATISTICAL SAMPLING -- {tier} tier")
     print(f"{'='*60}")
     print(f"Trials per spec: {args.sample_trials}")
     print(f"Specs dir: {specs_dir}")
@@ -221,7 +221,7 @@ def main():
     )
     parser.add_argument(
         "--refine", action="store_true",
-        help="Run iterative refinement loop (attack → fix → re-attack → converge)"
+        help="Run iterative refinement loop (attack -> fix -> re-attack -> converge)"
     )
     parser.add_argument(
         "--refine-iters", type=int, default=5,
@@ -281,7 +281,7 @@ def main():
 
     args = parser.parse_args()
 
-    print(f"SpecSaboteur — Adversarial Specification Validation")
+    print(f"SpecSaboteur -- Adversarial Specification Validation")
     print(f"{'='*50}")
     print(f"Provider: {args.provider}")
     print(f"Layer: {args.layer}")

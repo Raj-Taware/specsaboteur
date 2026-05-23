@@ -63,7 +63,7 @@ class StatisticalSampler:
         )
 
         print(f"\n{'='*60}")
-        print(f"[SAMPLING] {spec.name} — {self.num_trials} trials")
+        print(f"[SAMPLING] {spec.name} -- {self.num_trials} trials")
         print(f"{'='*60}")
 
         strategy_counts = defaultdict(int)
@@ -134,7 +134,7 @@ class StatisticalSampler:
 
     def _print_summary(self, report: SamplingReport):
         print(f"\n{'='*60}")
-        print(f"SAMPLING SUMMARY — {report.tier} tier ({report.num_trials} trials each)")
+        print(f"SAMPLING SUMMARY -- {report.tier} tier ({report.num_trials} trials each)")
         print(f"{'='*60}")
         print(f"{'Spec':<25} {'Mean Gaps':>10} {'Std':>8} {'Detection':>10}")
         print(f"{'-'*55}")

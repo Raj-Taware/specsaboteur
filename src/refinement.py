@@ -9,15 +9,14 @@ import json
 import os
 import re
 import time
-import copy
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from typing import Optional
 from pathlib import Path
 
 from .llm_client import LLMClient
 from .dafny_bridge import DafnyBridge, extract_spec_from_file
 from .adversarial_generator import Strategy
-from .pipeline import SpecSaboteur, SaboteurResult
+from .pipeline import SpecSaboteur
 
 
 @dataclass

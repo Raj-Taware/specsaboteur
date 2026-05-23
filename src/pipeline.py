@@ -3,11 +3,10 @@
 import json
 import os
 import time
-from dataclasses import dataclass, field, asdict
-from pathlib import Path
+from dataclasses import dataclass, field
 from typing import Optional
 
-from .dafny_bridge import DafnyBridge, extract_spec_from_file, VerifyResult
+from .dafny_bridge import DafnyBridge, extract_spec_from_file
 from .adversarial_generator import (
     Strategy, AdversarialImpl, build_adversarial_prompt,
     build_retry_prompt, parse_llm_response
@@ -223,7 +222,7 @@ Do not return the full method signature — only the NEW clauses to add."""
                 if gap.suggested_fix:
                     print(f"      Suggested fix: {gap.suggested_fix[:200]}...")
         else:
-            print(f"\n  NO GAPS FOUND — spec appears adequate!")
+            print(f"\n  NO GAPS FOUND - spec appears adequate!")
         print(f"{'='*60}")
 
 

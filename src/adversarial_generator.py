@@ -1,9 +1,8 @@
 """Adversarial implementation generator — the core of SpecSaboteur."""
 
 import json
-import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 from enum import Enum
 

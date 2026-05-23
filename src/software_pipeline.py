@@ -117,7 +117,7 @@ class SoftwareSaboteur:
 
             elif verdict.compliant:
                 result.attacks_compliant += 1
-                print(f"  [PARTIAL] Compliant but not adversarial — legit alternative")
+                print(f"  [PARTIAL] Compliant but not adversarial -- legit alternative")
 
             else:
                 print(f"  [MISS] Spec caught attack")
