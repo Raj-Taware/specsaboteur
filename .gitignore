@@ -33,3 +33,8 @@ Thumbs.db
 
 # Reports are tracked (they're our results)
 # reports/
+
+# Media files (stray downloads)
+*.mkv
+*.mp4
+*.avi

@@ -1,0 +1,65 @@
+[
+  {
+    "spec_name": "01_rest_api_users",
+    "domain": "rest_api",
+    "language": "python",
+    "intent": "GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens. Supports offset and limit query parameters for pagination.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 2,
+    "attacks_adversarial": 2,
+    "duration_seconds": 66.3124589920044,
+    "gaps": [
+      {
+        "strategy": "trivial_satisfaction",
+        "exploited_gap": "The gap exploited is that while the spec mentions supporting offset and limit for pagination, the implementation completely ignores these parameters and does not fetch or return any real user data.",
+        "explanation": "This implementation is adversarial because it always returns an empty list of users regardless of the actual data in the system. It also ignores the offset and limit query parameters, meaning pagination functionality does not work as intended.",
+        "adversarial_code": "// Complete runnable implementation in python\nimport json\nfrom flask import Flask, request, jsonify\n\ndef create_app():\n    app = Flask(__name__)\n    \n    @app.route('/users', methods=['GET'])\n    def get_users():\n        auth_header = request.headers.get('Authorization')\n        if not auth_header or not auth_header.startswith('Bearer '):\n            return jsonify({\"error\": \"Unauthorized\"}), 401\n        \n        # Ignore offset and limit parameters\n        # Return hardcoded/minimal values satisfying the spec's output format\n        response = {\n            \"users\": [],\n            \"total\": 0,\n            \"offset\": 0,\n            \"limit\": 20\n        }\n        return jsonify(response), 200\n    \n    return app\n\nif __name__ == '__main__':\n    app = create_app()\n    app.run(debug=True)\n",
+        "suggested_fix": "To address the identified gap and ensure that the `GET /users` endpoint correctly supports pagination and returns actual user data based on the `offset` and `limit` parameters, we can add the following minimal additions to the specification:\n\n1. **Response Body Requirements for Users Array**:\n   - The \"users\" array in the response body must contain a list of user objects that matches the requested subset of users as determined by the `offset` and `limit` query parameters.\n   - Each user object must include at least an \"id\" field uniquely identifying each user.\n\n2. **Total Field Accuracy**:\n   - The \"total\" field in the response body must accurately reflect the total number of users available, regardless of pagination parameters.\n\n3. **Offset Parameter Handling**:\n   - If the `offset` parameter is provided and valid (non-negative integer), the endpoint must skip the specified number of users before starting to return user data.\n   - If no `offset` parameter is provided, the default behavior is to start from the first user (equivalent to an offset of 0).\n\n4. **Limit Parameter Handling**:\n   - If the `limit` parameter is provided and valid (positive integer), the endpoint must return up to the specified number of users starting from the position determined by the `offset`.\n   - If no `limit` parameter is provided, the default behavior is to return a maximum of 20 users.\n\n5. **Response Consistency**:\n   - The response should be consistent with the requested parameters: if `offset` and/or `limit` are specified, the returned \"users\" array must reflect these constraints.\n   - If there are no users available starting from the given offset, the \"users\" array should be empty.\n\n6. **Error Handling for Invalid Parameters**:\n   - If the `offset` or `limit` parameters are provided but invalid (e.g., negative limit), the endpoint should return a 400 Bad Request response with an appropriate error message in the body.\n   - Example error response: `{ \"error\": \"Invalid offset/limit value\" }`\n\nThese additional requirements ensure that the implementation not only adheres to the basic specification of authentication and response format but also correctly handles pagination parameters, providing accurate and meaningful data based on user requests.",
+        "judge_compliant": true,
+        "judge_confidence": 1.0
+      },
+      {
+        "strategy": "security_bypass",
+        "exploited_gap": "The gap exploited is the lack of actual validation of the Bearer token's validity. The implementation checks only for the presence and format ('Bearer ') of the token but does not verify its authenticity or correctness.",
+        "explanation": "This implementation satisfies the literal requirements of the specification without considering the security implications. It accepts any token in the Authorization header and does not enforce authentication, allowing unauthorized access to all user data. The dummy data represents a list of all users, which could be sensitive information exposed due to the lack of proper authorization checks.",
+        "adversarial_code": "// Complete runnable implementation in python\nfrom flask import Flask, request, jsonify\n\ndef get_users(offset=0, limit=20):\n    # Dummy data representing all users\n    users = [{'id': i, 'name': f'User {i}'} for i in range(100)]\n    total = len(users)\n    paginated_users = users[offset:offset + limit]\n    return {\n        'users': paginated_users,\n        'total': total,\n        'offset': offset,\n        'limit': limit\n    }\n\napp = Flask(__name__)\n\n@app.route('/users', methods=['GET'])\ndef users_endpoint():\n    # Authentication: Bearer token in Authorization header (required)\n    auth_header = request.headers.get('Authorization')\n    if not auth_header or not auth_header.startswith('Bearer '):\n        return jsonify({'error': 'Unauthorized'}), 401\n    \n    # We will accept any token, thus bypassing authentication\n    offset = int(request.args.get('offset', 0))\n    limit = int(request.args.get('limit', 20))\n    response_data = get_users(offset, limit)\n    return jsonify(response_data), 200\n\nif __name__ == '__main__':\n    app.run(debug=True)",
+        "suggested_fix": "To address the identified gap in the specification and ensure that the Bearer token is not only present but also valid, we need to introduce specific requirements for token validation. Here are the minimal additions to the current specification:\n\n1. **Token Validation**: The server must validate the authenticity of the provided Bearer token by checking it against a trusted authority (e.g., an OAuth provider) before processing the request.\n   \n2. **Error Handling for Invalid Tokens**: If the Bearer token is invalid, expired, or not recognized by the authentication service, the server must return a `401 Unauthorized` response with an appropriate error message indicating the nature of the failure.\n\n3. **Logging and Monitoring**: The system should log all failed authentication attempts (e.g., due to invalid tokens) for auditing purposes. This logging should include relevant details such as the timestamp, client IP address, and token ID if applicable.\n\n4. **Rate Limiting on Failed Authentications**: To prevent abuse from repeated failed authentication attempts, the server must implement rate limiting that temporarily blocks requests from a particular IP address after a certain number of consecutive failed authentication attempts within a defined time window.\n\nBy incorporating these requirements into the specification, we ensure that the implementation not only checks for the presence and format of the token but also verifies its validity, thereby closing the identified gap.",
+        "judge_compliant": true,
+        "judge_confidence": 1.0
+      }
+    ]
+  },
+  {
+    "spec_name": "02_solidity_transfer",
+    "domain": "smart_contract",
+    "language": "solidity",
+    "intent": "ERC-20 token transfer function. Transfers tokens from sender to recipient. Must decrease sender balance, increase recipient balance, emit Transfer event. Must prevent transfers exceeding sender balance. Must be safe against reentrancy.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 28.107200384140015,
+    "gaps": []
+  },
+  {
+    "spec_name": "03_auth_rbac",
+    "domain": "auth",
+    "language": "python",
+    "intent": "Role-based access control system. Admin users can create/delete users. Regular users can only view their own profile. Authentication tokens must be valid and not expired. Failed login attempts must be rate-limited.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 75.44668555259705,
+    "gaps": []
+  },
+  {
+    "spec_name": "04_database_schema",
+    "domain": "database",
+    "language": "sql",
+    "intent": "User registration system. Each user has unique email, hashed password, created_at timestamp. Email must be case-insensitive unique. Passwords must never be stored in plaintext.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 28.567307949066162,
+    "gaps": []
+  }
+]

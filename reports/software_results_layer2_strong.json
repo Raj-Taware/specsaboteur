@@ -1,0 +1,46 @@
+[
+  {
+    "spec_name": "01_rest_api_users",
+    "domain": "rest_api",
+    "language": "python",
+    "intent": "GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens. Supports offset and limit query parameters for pagination.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 43.46166801452637,
+    "gaps": []
+  },
+  {
+    "spec_name": "02_solidity_transfer",
+    "domain": "smart_contract",
+    "language": "solidity",
+    "intent": "ERC-20 token transfer function. Transfers tokens from sender to recipient. Must decrease sender balance, increase recipient balance, emit Transfer event. Must prevent transfers exceeding sender balance. Must be safe against reentrancy.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 33.00355625152588,
+    "gaps": []
+  },
+  {
+    "spec_name": "03_auth_rbac",
+    "domain": "auth",
+    "language": "python",
+    "intent": "Role-based access control system. Admin users can create/delete users. Regular users can only view their own profile. Authentication tokens must be valid and not expired. Failed login attempts must be rate-limited.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 57.11515021324158,
+    "gaps": []
+  },
+  {
+    "spec_name": "04_database_schema",
+    "domain": "database",
+    "language": "sql",
+    "intent": "User registration system. Each user has unique email, hashed password, created_at timestamp. Email must be case-insensitive unique (no two users with same email differing only by case). Passwords must never be stored in plaintext.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 28.584673166275024,
+    "gaps": []
+  }
+]

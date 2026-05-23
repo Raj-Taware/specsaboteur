@@ -28,21 +28,27 @@ class GeminiClient(LLMClient):
         except ImportError:
             raise ImportError("Install: pip install google-genai")
 
-        # Prefer GEMINI_API_KEY; fall back to GOOGLE_API_KEY
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            api_key = os.environ.get("GOOGLE_API_KEY")
-        if not api_key:
+        # Collect all available API keys for rotation
+        self._api_keys = []
+        for env_var in ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY_2", "GEMINI_API_KEY_3"]:
+            key = os.environ.get(env_var)
+            if key and key not in self._api_keys:
+                self._api_keys.append(key)
+
+        if not self._api_keys:
             raise ValueError("Set GEMINI_API_KEY or GOOGLE_API_KEY env var")
 
-        self.client = genai.Client(api_key=api_key)
+        self._genai = genai
+        self._key_index = 0
+        self.client = genai.Client(api_key=self._api_keys[0])
         self.model = model
         self._name = f"gemini-{model}"
         self.retry_delay = retry_delay
         self.max_retries = 8
-        # Proactive rate limiting
-        self._min_interval = 60.0 / rpm_limit  # seconds between calls
+        # Proactive rate limiting (per-key effective rate = rpm_limit * num_keys)
+        self._min_interval = 60.0 / rpm_limit  # seconds between calls per key
         self._last_call_time = 0.0
+        print(f"  [GEMINI] {len(self._api_keys)} API key(s) loaded for rotation")
 
     def generate(self, prompt: str, temperature: float = 0.7) -> str:
         import time
@@ -70,6 +76,11 @@ class GeminiClient(LLMClient):
                 return response.text
             except Exception as e:
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                    # Rotate to next key if available
+                    if len(self._api_keys) > 1:
+                        self._key_index = (self._key_index + 1) % len(self._api_keys)
+                        self.client = self._genai.Client(api_key=self._api_keys[self._key_index])
+                        print(f"  [KEY ROTATE] Switched to key {self._key_index + 1}/{len(self._api_keys)}")
                     wait = self.retry_delay * (attempt + 1)
                     print(f"  [RATE LIMIT] Waiting {wait:.0f}s before retry {attempt+2}/{self.max_retries}...")
                     time.sleep(wait)
