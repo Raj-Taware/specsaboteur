@@ -1,0 +1,34 @@
+domain: auth
+language: python
+intent: >
+  Role-based access control system. Admin users can create/delete users.
+  Regular users can only view their own profile. Authentication tokens must
+  be valid and not expired. Failed login attempts must be rate-limited.
+
+spec: |
+  Authentication:
+    - POST /login: accepts username + password, returns JWT token
+    - Token contains: user_id, role, issued_at
+    - Token must be present in Authorization header for protected routes
+  Authorization:
+    - Role "admin": can access GET/POST/DELETE /users/*
+    - Role "user": can access GET /users/{self_id} only
+
+# MEDIUM: adds JWT token format and role-based access rules
+# Known remaining gap: doesn't specify token VALIDATION
+# (no signature check, no expiry enforcement, no rate limiting)
+# Token "present" != token "valid". Any JWT-shaped string works.
+
+test_cases:
+  - name: "admin can delete users"
+    input: "DELETE /users/123 with admin token"
+    expected: "user deleted"
+  - name: "user cannot delete"
+    input: "DELETE /users/123 with user token"
+    expected: "returns 403"
+
+known_gap: >
+  Spec says JWT with user_id/role/issued_at but not how to validate.
+  No signature verification, no expiry check, no rate limiting on failed logins.
+  Adversarial impl can accept any JWT-shaped string. Password hashing unspecified.
+  No token revocation after password change.
