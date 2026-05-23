@@ -30,6 +30,10 @@ Thumbs.db
 # Dafny temp
 *.dfy.bak
 *.dfy.tmp
+_temp_refine_*
+
+# Local runner helpers
+run_refine.py
 
 # Reports are tracked (they're our results)
 # reports/

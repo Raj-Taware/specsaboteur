@@ -102,6 +102,111 @@ def run_layer2(args, llm):
     return results
 
 
+def run_refine(args, llm):
+    """Iterative refinement: attack → fix → re-attack → converge."""
+    from src.refinement import IterativeRefiner, save_refinement_results
+
+    if not args.specs:
+        spec_files = sorted(glob.glob("specs/weak/*.dfy"))
+    else:
+        spec_files = args.specs
+
+    if not spec_files:
+        print("No spec files to refine. Provide paths as arguments.")
+        return
+
+    print(f"\n{'='*60}")
+    print(f"ITERATIVE REFINEMENT")
+    print(f"{'='*60}")
+    print(f"Specs: {len(spec_files)}")
+    print(f"Max iterations: {args.refine_iters}")
+
+    try:
+        dafny = DafnyBridge(dafny_path=args.dafny_path, timeout=args.dafny_timeout)
+    except RuntimeError as e:
+        print(f"Dafny error: {e}")
+        return
+
+    strategies = [Strategy(s) for s in args.strategies]
+    refiner = IterativeRefiner(
+        llm_client=llm,
+        dafny_bridge=dafny,
+        max_iterations=args.refine_iters,
+        strategies=strategies,
+        max_retries=args.max_retries,
+    )
+
+    results = []
+    for spec_file in spec_files:
+        try:
+            result = refiner.refine(spec_file)
+            results.append(result)
+        except Exception as e:
+            print(f"[ERROR] Refinement failed for {spec_file}: {e}")
+            import traceback
+            traceback.print_exc()
+
+    if results:
+        save_refinement_results(results, args.output)
+
+    return results
+
+
+def run_sampling(args, llm):
+    """Statistical sampling for Layer 2."""
+    from src.sampling import StatisticalSampler, save_sampling_results
+
+    specs_dir = args.software_specs or "specs/software_weak"
+    tier = "weak"
+    if "medium" in specs_dir:
+        tier = "medium"
+    elif "strong" in specs_dir:
+        tier = "strong"
+
+    print(f"\n{'='*60}")
+    print(f"STATISTICAL SAMPLING — {tier} tier")
+    print(f"{'='*60}")
+    print(f"Trials per spec: {args.sample_trials}")
+    print(f"Specs dir: {specs_dir}")
+
+    sampler = StatisticalSampler(llm_client=llm, num_trials=args.sample_trials)
+    report = sampler.sample_all(specs_dir, tier=tier)
+
+    if report.specs:
+        save_sampling_results(report, args.output)
+
+    return report
+
+
+def run_taxonomy(args):
+    """Extract gap taxonomy from existing results."""
+    from src.taxonomy import extract_taxonomy_from_results, build_taxonomy_report, save_taxonomy
+
+    print(f"\n{'='*60}")
+    print(f"GAP TAXONOMY EXTRACTION")
+    print(f"{'='*60}")
+
+    # Find all result files
+    layer1_paths = []
+    layer2_paths = []
+    reports_dir = args.output
+
+    for root, dirs, files in os.walk(reports_dir):
+        for f in files:
+            path = os.path.join(root, f)
+            if f == "results.json":
+                layer1_paths.append(path)
+            elif f.startswith("software_results") and f.endswith(".json"):
+                layer2_paths.append(path)
+
+    print(f"Layer 1 result files: {len(layer1_paths)}")
+    print(f"Layer 2 result files: {len(layer2_paths)}")
+
+    patterns = extract_taxonomy_from_results(layer1_paths, layer2_paths)
+    report = build_taxonomy_report(patterns)
+    save_taxonomy(report, reports_dir)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="SpecSaboteur: Find gaps in formal specifications via adversarial implementation synthesis"
@@ -113,6 +218,26 @@ def main():
     parser.add_argument(
         "--layer", choices=["1", "2", "both"], default="both",
         help="Which layer to run: 1=Dafny formal, 2=software specs, both=all (default: both)"
+    )
+    parser.add_argument(
+        "--refine", action="store_true",
+        help="Run iterative refinement loop (attack → fix → re-attack → converge)"
+    )
+    parser.add_argument(
+        "--refine-iters", type=int, default=5,
+        help="Max refinement iterations (default: 5)"
+    )
+    parser.add_argument(
+        "--sample", action="store_true",
+        help="Run statistical sampling for Layer 2 (N trials per spec)"
+    )
+    parser.add_argument(
+        "--sample-trials", type=int, default=5,
+        help="Number of sampling trials per spec (default: 5)"
+    )
+    parser.add_argument(
+        "--taxonomy", action="store_true",
+        help="Extract gap taxonomy from existing results"
     )
     parser.add_argument(
         "--software-specs", default=None,
@@ -174,6 +299,19 @@ def main():
     except Exception as e:
         print(f"Failed to create LLM client: {e}")
         sys.exit(1)
+
+    # Special modes
+    if args.taxonomy:
+        run_taxonomy(args)
+        return
+
+    if args.refine:
+        run_refine(args, llm)
+        return
+
+    if args.sample:
+        run_sampling(args, llm)
+        return
 
     # Run selected layers
     if args.layer in ("1", "both"):

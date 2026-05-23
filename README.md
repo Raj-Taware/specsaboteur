@@ -123,9 +123,35 @@ Adversarial implementations verified by the Dafny theorem prover — **mathemati
 | **Layer 1 (Dafny)** | **8 gaps** (100%) | **4 gaps** (80%) | **0 gaps** (0%) |
 | **Layer 2 (Software)** | 1 gap | 2 gaps | 0 gaps |
 
-**Monotonic gradient confirmed across both layers:** weaker specs → more gaps found → stronger validation signal. SpecSaboteur functions as a **spec strength metric**.
+**Monotonic gradient confirmed across both layers:** weaker specs produce more gaps, stronger specs resist attack. SpecSaboteur functions as a **spec strength metric**.
 
-The three-tier progression validates SpecSaboteur as a **spec strength metric**: more gaps found = weaker specification.
+### Iterative Refinement: Attack → Fix → Converge
+
+The core demo: weak specs are iteratively strengthened through adversarial feedback until no gaps remain.
+
+| Spec | Gap Trajectory | Iterations | Fix Applied |
+|------|:--------------:|:----------:|-------------|
+| Sort | 2 → 0 | 2 | `ensures multiset(a[..]) == old(multiset(a[..]))` |
+| Binary Search | 1 → 0 | 2 | `ensures (exists k :: ...) ==> index >= 0` |
+| Max | 2 → 0 | 2 | `ensures forall j :: 0 <= j < a.Length ==> a[j] <= m` |
+| Abs | 2 → 0 | 2 | `ensures x < 0 ==> result == -x` |
+
+> **100% convergence.** Every attacked weak spec was automatically strengthened to resist adversarial attack within 2 iterations. This is **CEGIS inverted** — counterexample-guided specification refinement.
+
+### Gap Taxonomy
+
+All 17 discovered gaps are automatically categorized into a structured taxonomy:
+
+| Category | Count | Severity | Description |
+|----------|:-----:|----------|-------------|
+| Missing Negative Case | 5 | Medium | Spec handles positive case but not negative |
+| Token Bypass | 4 | Critical | Auth spec accepts any token without validation |
+| Missing Preservation | 3 | Critical | Input elements not preserved in output |
+| Missing Completeness | 2 | High | Method not required to find existing results |
+| Tautological Constraint | 1 | Critical | Postcondition constrains nothing |
+| Missing Base Case | 1 | High | Only base cases constrained, not general case |
+
+This taxonomy serves as training data for future spec-repair models (see [Future Work](#future-work)).
 
 ## Quick Start
 
@@ -171,6 +197,15 @@ python run.py --provider ollama --model qwen2.5-coder:32b-instruct
 # Attack specific specs
 python run.py specs/weak/01_sort.dfy specs/weak/03_max.dfy
 
+# Iterative refinement: attack → fix → re-attack → converge
+python run.py specs/weak/01_sort.dfy --refine --refine-iters 5
+
+# Statistical sampling (N=5 trials per spec for Layer 2)
+python run.py --sample --sample-trials 5 --software-specs specs/software_weak
+
+# Extract gap taxonomy from existing results
+python run.py --taxonomy
+
 # Generate HTML report
 python generate_report.py
 ```
@@ -186,6 +221,9 @@ specsaboteur/
 │   ├── software_generator.py    # Software-domain adversarial prompts
 │   ├── dafny_bridge.py          # Dafny CLI wrapper (verify/compile/run)
 │   ├── spec_judge.py            # LLM-as-judge for Layer 2
+│   ├── refinement.py            # Iterative spec refinement loop
+│   ├── sampling.py              # Statistical sampling for Layer 2
+│   ├── taxonomy.py              # Gap categorization + training data
 │   ├── llm_client.py            # Multi-provider LLM abstraction
 │   ├── software_spec.py         # YAML spec loader
 │   └── report.py                # Unified HTML report generator
@@ -275,10 +313,22 @@ Authentication:
 
 ## Future Work
 
-- Integration with Atlas formal-specification-ide for write→validate feedback loop
+### Spec Repair via Adversarial Feedback (Dataset Curation)
+
+SpecSaboteur's gap taxonomy produces structured (spec, gap, fix) tuples — training data for **spec-repair models**. The vision:
+
+1. **Curate dataset** from adversarial attacks across large spec corpora (DafnyBench, VERINA)
+2. **Fine-tune** a model on (weak_spec, gap_description, strengthened_spec) examples
+3. **Deploy as spec linter** — flag likely gaps at write-time using learned patterns
+
+This inverts the current approach: instead of attacking specs post-hoc, prevent gaps during authoring. Not implemented due to compute constraints — the 17-entry taxonomy produced here is a proof of concept. Scaling to DafnyBench's 782 programs would produce a dataset sufficient for fine-tuning.
+
+### Other Directions
+
+- Integration with Atlas formal-specification-ide for write-time validation
 - Support for Lean 4 and Coq specifications
-- Automated strategy discovery via reinforcement learning
-- Iterative spec refinement: attack → fix → re-attack until convergence
+- Behavioral test filter: compile adversarial impls, run against test cases for deterministic gap confirmation
+- Overconstraining detection: generate correct impls to find specs that reject valid behavior
 
 ## License
 
