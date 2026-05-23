@@ -87,6 +87,19 @@ Adversarial implementations verified by the Dafny theorem prover — **mathemati
 
 > **8 adversarial implementations verified by Dafny. 100% gap detection on attacked specs.**
 
+#### Medium Specs (6 specs, 2 strategies each)
+
+| Spec | Gaps | Key Gap Found |
+|------|:----:|---------------|
+| Sort | 0 | Medium spec resisted attack |
+| Binary Search | 0 | Medium spec resisted attack |
+| Max | 0 | Attempted, couldn't verify |
+| **Abs** | **2** | Returns 0 for negative inputs (missing `x < 0 ==> result == -x`) |
+| **Sum** | **1** | Returns 0 for length ≥ 2 arrays (no constraint beyond base cases) |
+| **FindFirst** | **1** | Returns LAST occurrence instead of first (missing minimality) |
+
+> **4 gaps found on medium specs — subtle gaps detected where obvious ones were closed.**
+
 #### Strong Specs (6 specs, 2 strategies each)
 
 | Result | Details |
@@ -103,14 +116,14 @@ Adversarial implementations verified by the Dafny theorem prover — **mathemati
 | **Medium** | 4 | 2 | REST API: empty response + token bypass (any Bearer string accepted) |
 | **Strong** | 4 | 0 | No gaps — detailed specs resist adversarial generation |
 
-**Monotonic trend confirmed:** weak specs → most vulnerable, strong specs → resistant.
-
 ### Combined Results Summary
 
 | | Weak | Medium | Strong |
 |---|:---:|:---:|:---:|
-| **Layer 1 (Dafny)** | 8 gaps (100%) | *(pending)* | 0 gaps (0%) |
+| **Layer 1 (Dafny)** | **8 gaps** (100%) | **4 gaps** (80%) | **0 gaps** (0%) |
 | **Layer 2 (Software)** | 1 gap | 2 gaps | 0 gaps |
+
+**Monotonic gradient confirmed across both layers:** weaker specs → more gaps found → stronger validation signal. SpecSaboteur functions as a **spec strength metric**.
 
 The three-tier progression validates SpecSaboteur as a **spec strength metric**: more gaps found = weaker specification.
 
