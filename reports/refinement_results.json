@@ -1,44 +1,24 @@
 [
   {
-    "spec_file": "specs/weak/04_abs.dfy",
-    "intent": "Return the absolute value of an integer",
-    "original_spec": "// Intent: Return the absolute value of an integer\n// Known gap: missing ensures result >= 0\n\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
-    "final_spec": "// Intent: Return the absolute value of an integer\n// Known gap: missing ensures result >= 0\n\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n  ensures x < 0 ==> result == -x\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "spec_file": "specs/weak/06_find_first.dfy",
+    "intent": "Find the first occurrence of a value in an array",
+    "original_spec": "// Intent: Find the first occurrence of a value in an array\n// Known gap: missing \"first\" constraint - could return any matching index\n\nmethod FindFirst(a: array<int>, target: int) returns (index: int)\n  ensures index >= 0 ==> 0 <= index < a.Length && a[index] == target\n  ensures index < 0 ==> forall i :: 0 <= i < a.Length ==> a[i] != target\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "final_spec": "// Intent: Find the first occurrence of a value in an array\n// Known gap: missing \"first\" constraint - could return any matching index\n\nmethod FindFirst(a: array<int>, target: int) returns (index: int)\n  ensures index >= 0 ==> 0 <= index < a.Length && a[index] == target\n  ensures index < 0 ==> forall i :: 0 <= i < a.Length ==> a[i] != target\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
     "converged": true,
-    "total_gaps_found": 2,
-    "total_gaps_closed": 1,
-    "total_duration_seconds": 109.98881244659424,
+    "total_gaps_found": 0,
+    "total_gaps_closed": 0,
+    "total_duration_seconds": 749.679673910141,
     "gap_trajectory": [
-      2,
       0
     ],
     "iterations": [
       {
         "iteration": 1,
-        "spec_text": "// Intent: Return the absolute value of an integer\n// Known gap: missing ensures result >= 0\n\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
-        "gaps_found": 2,
-        "gaps_details": [
-          {
-            "strategy": "trivial_satisfaction",
-            "gap": "The specification only constrains the behavior for non-negative inputs (`x >= 0`). It completely leaves the behavior for negative inputs (`x < 0`) unspecified, allowing any value to be returned in that case. Additionally, it does not include a general constraint that `result` must always be non-negative (`ensures result >= 0`).",
-            "fix": "```dafny\nensures x < 0 ==> result == -x\n```"
-          },
-          {
-            "strategy": "edge_case_exploitation",
-            "gap": "The specification is incomplete because it only defines the postcondition for non-negative inputs (`x >= 0`). It completely omits any constraint on the `result` when the input `x` is negative (`x < 0`). This allows the implementation to return an incorrect value for negative inputs while still formally satisfying the given `ensures` clause due to the vacuous truth of the implication.",
-            "fix": "ensures x < 0 ==> result == -x"
-          }
-        ],
-        "fix_applied": "```dafny\nensures x < 0 ==> result == -x\n```",
-        "duration_seconds": 68.77941751480103
-      },
-      {
-        "iteration": 2,
-        "spec_text": "// Intent: Return the absolute value of an integer\n// Known gap: missing ensures result >= 0\n\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n  ensures x < 0 ==> result == -x\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "spec_text": "// Intent: Find the first occurrence of a value in an array\n// Known gap: missing \"first\" constraint - could return any matching index\n\nmethod FindFirst(a: array<int>, target: int) returns (index: int)\n  ensures index >= 0 ==> 0 <= index < a.Length && a[index] == target\n  ensures index < 0 ==> forall i :: 0 <= i < a.Length ==> a[i] != target\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
         "gaps_found": 0,
         "gaps_details": [],
         "fix_applied": null,
-        "duration_seconds": 41.20795559883118
+        "duration_seconds": 749.679673910141
       }
     ]
   }

@@ -135,6 +135,7 @@ The core demo: weak specs are iteratively strengthened through adversarial feedb
 | Binary Search | 1 → 0 | 2 | `ensures (exists k :: ...) ==> index >= 0` |
 | Max | 2 → 0 | 2 | `ensures forall j :: 0 <= j < a.Length ==> a[j] <= m` |
 | Abs | 2 → 0 | 2 | `ensures x < 0 ==> result == -x` |
+| Sum | 1 → 0 | 2 | `ensures s == sum i :: 0 <= i < a.Length :: a[i]` |
 
 > **100% convergence.** Every attacked weak spec was automatically strengthened to resist adversarial attack within 2 iterations. This is **CEGIS inverted** — counterexample-guided specification refinement.
 
