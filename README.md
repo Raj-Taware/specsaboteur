@@ -101,7 +101,7 @@ Extends the concept to real-world software specifications — REST APIs, smart c
 ### Installation
 
 ```bash
-git clone https://github.com/yourusername/specsaboteur.git
+git clone https://github.com/Raj-Taware/specsaboteur.git
 cd specsaboteur
 pip install -r requirements.txt
 ```
