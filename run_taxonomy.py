@@ -3,44 +3,29 @@
 import sys, os, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.taxonomy import extract_taxonomy_from_results, GapPattern
+from src.taxonomy import extract_taxonomy_from_results, build_taxonomy_report, save_taxonomy
 
 output_dir = os.environ.get("OUTPUT", "reports/qwen")
 
-# Collect all result files
-result_files = []
+# Collect L1 and L2 result files separately
+layer1_paths = []
+layer2_paths = []
 for root, dirs, files in os.walk(output_dir):
     for f in files:
-        if f in ("results.json", "software_results.json", "refinement_results.json"):
-            result_files.append(os.path.join(root, f))
+        full = os.path.join(root, f)
+        if f == "results.json":
+            layer1_paths.append(full)
+        elif f == "software_results.json":
+            layer2_paths.append(full)
 
-print(f"Found {len(result_files)} result files: {result_files}")
+print(f"Layer 1 files: {layer1_paths}")
+print(f"Layer 2 files: {layer2_paths}")
 
-all_patterns = []
-for rf in result_files:
-    try:
-        patterns = extract_taxonomy_from_results(rf)
-        all_patterns.extend(patterns)
-        print(f"  {rf}: {len(patterns)} patterns")
-    except Exception as e:
-        print(f"  [ERROR] {rf}: {e}")
+patterns = extract_taxonomy_from_results(layer1_paths=layer1_paths, layer2_paths=layer2_paths)
+print(f"Extracted {len(patterns)} gap patterns")
 
-# Save taxonomy
-taxonomy = {}
-for p in all_patterns:
-    cat = p.category
-    if cat not in taxonomy:
-        taxonomy[cat] = []
-    taxonomy[cat].append({
-        "subcategory": p.subcategory,
-        "description": p.description,
-        "spec_file": p.spec_file,
-        "domain": p.domain,
-        "strategy": p.strategy,
-        "severity": p.severity,
-    })
-
-out_path = os.path.join(output_dir, "gap_taxonomy.json")
-with open(out_path, "w") as f:
-    json.dump(taxonomy, f, indent=2)
-print(f"\n[Taxonomy saved to {out_path}] — {len(all_patterns)} patterns in {len(taxonomy)} categories")
+if patterns:
+    report = build_taxonomy_report(patterns)
+    save_taxonomy(report, output_dir)
+else:
+    print("No gaps found to categorize")
