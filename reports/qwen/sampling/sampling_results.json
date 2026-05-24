@@ -1,0 +1,134 @@
+[
+  {
+    "spec": "01_rest_api_users",
+    "trials": [
+      {
+        "trial": 1,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 2,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 3,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 4,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 5,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      }
+    ],
+    "mean_gaps": 0.0,
+    "min_gaps": 0,
+    "max_gaps": 0
+  },
+  {
+    "spec": "02_solidity_transfer",
+    "trials": [
+      {
+        "trial": 1,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 2,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 3,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 4,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 5,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      }
+    ],
+    "mean_gaps": 0.0,
+    "min_gaps": 0,
+    "max_gaps": 0
+  },
+  {
+    "spec": "03_auth_rbac",
+    "trials": [
+      {
+        "trial": 1,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 2,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 3,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 4,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 5,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      }
+    ],
+    "mean_gaps": 0.0,
+    "min_gaps": 0,
+    "max_gaps": 0
+  },
+  {
+    "spec": "04_database_schema",
+    "trials": [
+      {
+        "trial": 1,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 2,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 3,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 4,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      },
+      {
+        "trial": 5,
+        "gaps_found": 0,
+        "error": "'SoftwareResult' object has no attribute 'gaps_confirmed'"
+      }
+    ],
+    "mean_gaps": 0.0,
+    "min_gaps": 0,
+    "max_gaps": 0
+  }
+]

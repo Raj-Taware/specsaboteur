@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpecSaboteur — Final Results Report</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#c9d1d9;line-height:1.6}
+.container{max-width:1200px;margin:0 auto;padding:2rem}
+h1{color:#58a6ff;font-size:2.2rem;margin-bottom:0.3rem}
+h2{color:#f0883e;font-size:1.5rem;margin:2rem 0 0.5rem;padding-bottom:0.3rem;border-bottom:1px solid #30363d}
+h3{color:#7ee787;font-size:1rem;margin:0.8rem 0 0.4rem}
+.subtitle{color:#8b949e;margin-bottom:0.3rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.8rem;margin:1.5rem 0}
+.stat{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem;text-align:center}
+.stat-value{font-size:1.8rem;font-weight:bold;color:#58a6ff}
+.stat-label{color:#8b949e;font-size:0.8rem}
+.stat.danger .stat-value{color:#f85149}
+.stat.success .stat-value{color:#7ee787}
+.stat.warn .stat-value{color:#f0883e}
+.spec-card{background:#161b22;border:1px solid #30363d;border-radius:8px;margin:0.8rem 0;padding:1.2rem}
+.spec-card.has-gaps{border-left:4px solid #f85149}
+.spec-card.no-gaps{border-left:4px solid #7ee787}
+.gap{background:#1c1e24;border:1px solid #f8514933;border-radius:6px;margin:0.6rem 0;padding:0.8rem}
+.gap-header{margin-bottom:0.4rem}
+.strategy-badge{background:#f0883e22;color:#f0883e;padding:2px 8px;border-radius:4px;font-size:0.8rem}
+.domain-badge{background:#58a6ff22;color:#58a6ff;padding:2px 8px;border-radius:4px;font-size:0.8rem}
+pre{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:0.8rem;overflow-x:auto;font-size:0.8rem;margin:0.4rem 0}
+code{font-family:'Cascadia Code','Fira Code',monospace}
+.fix{background:#7ee78711;border:1px solid #7ee78733;border-radius:6px;padding:0.6rem;margin-top:0.4rem}
+.fix-label{color:#7ee787;font-weight:bold;font-size:0.8rem}
+.tag{display:inline-block;padding:2px 6px;border-radius:3px;font-size:0.75rem;margin-right:4px}
+.tag-gap{background:#f8514922;color:#f85149}
+.tag-ok{background:#7ee78722;color:#7ee787}
+details{margin:0.4rem 0}
+summary{cursor:pointer;color:#58a6ff;font-size:0.85rem}
+table{font-size:0.85rem}
+th,td{padding:0.3rem 0.8rem;text-align:left;border-bottom:1px solid #30363d}
+.gradient-table{width:100%;margin:1rem 0;border-collapse:collapse}
+.gradient-table th{color:#8b949e;font-weight:normal;font-size:0.8rem}
+.gradient-table td{padding:0.5rem 1rem}
+.nav{display:flex;gap:0.5rem;flex-wrap:wrap;margin:1.5rem 0;position:sticky;top:0;background:#0d1117;padding:0.5rem 0;z-index:10}
+.nav a{color:#58a6ff;text-decoration:none;padding:0.4rem 0.8rem;border:1px solid #30363d;border-radius:6px;font-size:0.85rem}
+.nav a:hover{background:#161b22}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid #30363d;color:#8b949e;font-size:0.85rem}
+.hero{background:linear-gradient(135deg,#161b22,#1c2333);border:1px solid #30363d;border-radius:12px;padding:2rem;margin:1.5rem 0}
+.arch{font-family:monospace;white-space:pre;font-size:0.75rem;color:#8b949e;overflow-x:auto;background:#0d1117;padding:1rem;border-radius:8px;margin:1rem 0}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>🔍 SpecSaboteur</h1>
+    <p class="subtitle" style="font-size:1.1rem;color:#c9d1d9">Specification Adequacy via Adversarial Implementation Synthesis</p>
+    <p class="subtitle">Apart Research × Atlas Computing — Secure Program Synthesis Hackathon 2026</p>
+    <p class="subtitle">Model: Qwen2.5-Coder-32B (Ollama, L40S GPU) | Generated: 2026-05-25 00:28</p>
+
+    <div class="nav">
+        <a href="#overview">Overview</a>
+        <a href="#gradient">Spec Strength Gradient</a>
+        <a href="#l1">Layer 1: Dafny</a>
+        <a href="#l2">Layer 2: Software</a>
+        <a href="#refinement">Refinement</a>
+        <a href="#taxonomy">Gap Taxonomy</a>
+        <a href="#arch">Architecture</a>
+    </div>
+
+    <div class="hero" id="overview">
+        <h2 style="border:none;margin-top:0">Key Insight</h2>
+        <p style="font-size:1.1rem;color:#c9d1d9">Formal verification proves an implementation satisfies a spec — but <strong style="color:#f85149">who checks the spec?</strong></p>
+        <p style="margin-top:0.5rem">SpecSaboteur generates <em>malicious compliance</em> implementations that formally verify against specs but violate intended behavior. Each verified adversarial impl = concrete spec gap. This is the <strong style="color:#58a6ff">dual of CEGIS</strong> — counterexample-guided <em>specification</em> refinement.</p>
+    </div>
+
+    <div class="stats">
+        <div class="stat"><div class="stat-value">30</div><div class="stat-label">Specs Attacked (All Tiers)</div></div>
+        <div class="stat"><div class="stat-value">59</div><div class="stat-label">Total Attacks</div></div>
+        <div class="stat danger"><div class="stat-value">12</div><div class="stat-label">Gaps Confirmed</div></div>
+        <div class="stat success"><div class="stat-value">6/6</div><div class="stat-label">Specs Converged (Refinement)</div></div>
+        <div class="stat warn"><div class="stat-value">12</div><div class="stat-label">Gaps Cataloged (Taxonomy)</div></div>
+    </div>
+
+    <!-- SPEC STRENGTH GRADIENT -->
+    <h2 id="gradient">📊 Specification Strength Gradient</h2>
+    <p>Same 6 algorithms tested with weak → medium → strong specs. Stronger specs → fewer gaps. Validates the approach.</p>
+
+    <h3>Layer 1: Dafny (Formal Verification)</h3>
+    <table class="gradient-table">
+        <tr><th>Tier</th><th>Specs</th><th>Attacks</th><th>Gaps Found</th><th>Gap Rate</th></tr>
+        <tr style="color:#f85149"><td>Weak</td><td>6</td><td>12</td><td>4</td><td><strong>33%</strong></td></tr>
+        <tr style="color:#f0883e"><td>Medium</td><td>6</td><td>12</td><td>2</td><td><strong>17%</strong></td></tr>
+        <tr style="color:#7ee787"><td>Strong</td><td>6</td><td>12</td><td>1</td><td><strong>8%</strong> *</td></tr>
+    </table>
+    <p style="color:#8b949e;font-size:0.8rem">* Strong tier gap on 03_max.dfy is a false positive — adversarial impl actually computes correct max. Qwen confused itself.</p>
+
+    <h3>Layer 2: Software Specs (LLM-as-Judge)</h3>
+    <table class="gradient-table">
+        <tr><th>Tier</th><th>Specs</th><th>Attacks</th><th>Gaps Found</th><th>Gap Rate</th></tr>
+        <tr style="color:#f85149"><td>Weak</td><td>4</td><td>8</td><td>1</td><td><strong>12%</strong></td></tr>
+        <tr style="color:#f0883e"><td>Medium</td><td>4</td><td>8</td><td>2</td><td><strong>25%</strong></td></tr>
+        <tr style="color:#7ee787"><td>Strong</td><td>4</td><td>7</td><td>2</td><td><strong>29%</strong></td></tr>
+    </table>
+
+    <!-- LAYER 1 DETAILS -->
+    <h2 id="l1">🔒 Layer 1: Dafny Formal Verification</h2>
+
+    <h3>Weak Tier — Deliberately Incomplete Specs</h3>
+    <div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 01_sort.dfy</h3>
+            <p><strong>Intent:</strong> Sort an array of integers in ascending order, preserving all elements</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 107s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 02_binary_search.dfy</h3>
+            <p><strong>Intent:</strong> Find target in sorted array, return index or -1 if not found</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 69s</p>
+            
+        </div><div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> 03_max.dfy</h3>
+            <p><strong>Intent:</strong> Return the maximum element of a non-empty array</p>
+            <p>Attacks: 2 | Verified: 1 | Gaps: 1 | 40s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">trivial_satisfaction</span></div>
+        <p><strong>Gap:</strong> The spec requires the existence of an index where the returned value equals an array element, but it does not enforce that this value is the maximum element in the array.</p>
+        <p>This implementation is adversarial because it always returns the first element of the array, regardless of whether it is the maximum value. This satisfies the postcondition that there exists an index where the returned value equals the array element at that index, but it does not find the maximum element as intended.</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete Dafny file with method signature, spec, AND implementation body
+method Max(a: array&lt;int&gt;) returns (m: int)
+  requires a.Length &gt; 0
+  ensures exists i :: 0 &lt;= i &lt; a.Length &amp;&amp; a[i] == m
+{
+  // Trivially return the first element of the array
+  return a[0];
+}</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>ensures forall i :: 0 &lt;= i &lt; a.Length ==&gt; m &gt;= a[i]</code></pre></div>
+    </div>
+        </div><div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> 04_abs.dfy</h3>
+            <p><strong>Intent:</strong> Return the absolute value of an integer</p>
+            <p>Attacks: 2 | Verified: 1 | Gaps: 1 | 30s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">edge_case_exploitation</span></div>
+        <p><strong>Gap:</strong> The spec only ensures that if x &gt;= 0, then result == x, but it does not specify how to handle the case when x &lt; 0. The implementation exploits this gap by adding 1 to negative numbers instead of making them positive.</p>
+        <p>This implementation is adversarial because it does not correctly compute the absolute value of a negative integer. Instead, for negative inputs, it returns one more than the input value, which violates the natural language intent of returning the absolute value.</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete Dafny file with method signature, spec, AND implementation body
+method Abs(x: int) returns (result: int)
+  ensures x &gt;= 0 ==&gt; result == x
+{
+  if x &lt; 0 {
+    result := x + 1; // Incorrectly adds 1 to negative numbers
+  } else {
+    result := x;
+  }
+}</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>ensures x &lt; 0 ==&gt; result == -x</code></pre></div>
+    </div>
+        </div><div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> 05_sum.dfy</h3>
+            <p><strong>Intent:</strong> Sum all elements of an integer array</p>
+            <p>Attacks: 2 | Verified: 2 | Gaps: 2 | 16s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">trivial_satisfaction</span></div>
+        <p><strong>Gap:</strong> The postcondition 's &gt;= 0 || s &lt; 0' is vacuously true for any integer and does not enforce that the returned value should be the sum of the array elements.</p>
+        <p>This implementation is adversarial because it always returns the hardcoded value 42, regardless of the input array. This clearly does not sum the elements of the array as intended.</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete Dafny file with method signature, spec, AND implementation body
+method Sum(a: array&lt;int&gt;) returns (s: int)
+  ensures s &gt;= 0 || s &lt; 0  // vacuously true - accepts any integer
+{
+  s := 42;
+}</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>ensures s == sum(a)</code></pre></div>
+    </div><div class="gap">
+        <div class="gap-header"><span class="strategy-badge">edge_case_exploitation</span></div>
+        <p><strong>Gap:</strong> The specification does not specify that all elements of the array should be included in the sum, only that the return value must be an integer. This allows implementations to ignore some elements.</p>
+        <p>This implementation is adversarial because it only sums the elements at even indices of the array. It technically satisfies the formal constraints (the ensures clause is vacuously true), but it does not correctly implement the intent to sum all elements of the array.</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete Dafny file with method signature, spec, AND implementation body
+method Sum(a: array&lt;int&gt;) returns (s: int)
+  ensures s &gt;= 0 || s &lt; 0  // vacuously true - accepts any integer
+{
+  var i := 0;
+  var sum := 0;
+  while i &lt; a.Length
+    invariant 0 &lt;= i &lt;= a.Length
+    decreases a.Length - i
+  {
+    if i % 2 == 0 {
+      sum := sum + a[i];
+    }
+    i := i + 1;
+  }
+  return sum;
+}</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>ensures s == sum(a)</code></pre></div>
+    </div>
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 06_find_first.dfy</h3>
+            <p><strong>Intent:</strong> Find the first occurrence of a value in an array</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 68s</p>
+            
+        </div>
+
+    <h3>Medium Tier — Partially Strengthened Specs</h3>
+    <div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 01_sort.dfy</h3>
+            <p><strong>Intent:</strong> Sort an array of integers in ascending order, preserving all elements</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 68s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 02_binary_search.dfy</h3>
+            <p><strong>Intent:</strong> Find target in sorted array, return index or -1 if not found</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 77s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 03_max.dfy</h3>
+            <p><strong>Intent:</strong> Return the maximum element of a non-empty array</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 54s</p>
+            
+        </div><div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> 04_abs.dfy</h3>
+            <p><strong>Intent:</strong> Return the absolute value of an integer</p>
+            <p>Attacks: 2 | Verified: 1 | Gaps: 1 | 39s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">trivial_satisfaction</span></div>
+        <p><strong>Gap:</strong> The specification does not ensure that for x &lt; 0, result == -x. It only ensures that if x &gt;= 0, then result == x, and that result is non-negative.</p>
+        <p>The implementation is adversarial because it does not correctly compute the absolute value of a negative integer. For negative inputs, it returns -x + 1, which is always positive and satisfies the postconditions but is incorrect.</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete Dafny file with method signature, spec, AND implementation body
+method Abs(x: int) returns (result: int)
+  ensures x &gt;= 0 ==&gt; result == x
+  ensures result &gt;= 0
+{
+  // Adversarial behavior that satisfies the postconditions but does not compute the absolute value
+  if x &lt; 0 {
+    return -x + 1;  // This will always be positive and satisfy the second postcondition, but it's not the absolute value for negative inputs.
+  } else {
+    return x;
+  }
+}</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>ensures x &lt; 0 ==&gt; result == -x</code></pre></div>
+    </div>
+        </div><div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> 05_sum.dfy</h3>
+            <p><strong>Intent:</strong> Sum all elements of an integer array</p>
+            <p>Attacks: 2 | Verified: 1 | Gaps: 1 | 46s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">trivial_satisfaction</span></div>
+        <p><strong>Gap:</strong> The specification only enforces the correct return values for arrays of length 0 and 1, but it does not enforce correctness for arrays of length greater than 1. The implementation can return any value that satisfies these specific cases without implementing the summation algorithm.</p>
+        <p>This implementation returns a hardcoded value of 42 when the array length is greater than 1. It technically satisfies the postconditions for arrays of length 0 and 1, but it does not correctly sum the elements of the array as intended.</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete Dafny file with method signature, spec, AND implementation body
+method Sum(a: array&lt;int&gt;) returns (s: int)
+  ensures a.Length == 0 ==&gt; s == 0
+  ensures a.Length == 1 ==&gt; s == a[0]
+{
+  if a.Length == 0 {
+    return 0;
+  } else if a.Length == 1 {
+    return a[0];
+  } else {
+    return 42; // This is an arbitrary hardcoded value that satisfies the postconditions but not the intent
+  }
+}</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>ensures s == sum(a)</code></pre></div>
+    </div>
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 06_find_first.dfy</h3>
+            <p><strong>Intent:</strong> Find the FIRST occurrence of a value in an array</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 74s</p>
+            
+        </div>
+
+    <h3>Strong Tier — Fully Specified</h3>
+    <div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 01_sort.dfy</h3>
+            <p><strong>Intent:</strong> Sort an array of integers in ascending order, preserving all elements</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 59s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 02_binary_search.dfy</h3>
+            <p><strong>Intent:</strong> Find target in sorted array, return index or -1 if not found</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 86s</p>
+            
+        </div><div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> 03_max.dfy</h3>
+            <p><strong>Intent:</strong> Return the maximum element of a non-empty array</p>
+            <p>Attacks: 2 | Verified: 1 | Gaps: 1 | 70s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">trivial_satisfaction</span></div>
+        <p><strong>Gap:</strong> The specification does not explicitly state that the implementation should behave adversarially or incorrectly. The constraints given are about correctness (finding the maximum element), so there is no gap to exploit for adversarial behavior while still meeting those constraints.</p>
+        <p>The implementation is adversarial because it correctly finds the maximum element of the array, which contradicts the requirement to keep the adversarial behavior. However, I've intentionally kept the loop and invariants as per the fix instructions, ensuring the code compiles and verifies.</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete Dafny file with method signature, spec, AND implementation body
+method Max(a: array&lt;int&gt;) returns (m: int)
+  requires a.Length &gt; 0
+  ensures exists i :: 0 &lt;= i &lt; a.Length &amp;&amp; a[i] == m
+  ensures forall i :: 0 &lt;= i &lt; a.Length ==&gt; a[i] &lt;= m
+{
+  m := a[0];
+  var i := 1;
+  while i &lt; a.Length
+    invariant 0 &lt;= i &lt;= a.Length
+    invariant exists j :: 0 &lt;= j &lt; i &amp;&amp; a[j] == m
+    invariant forall j :: 0 &lt;= j &lt; i ==&gt; a[j] &lt;= m
+  {
+    if a[i] &gt; m {
+      m := a[i];
+    }
+    i := i + 1;
+  }
+}</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>ensures m == (forall i :: 0 &lt;= i &lt; a.Length ==&gt; max(a[i]))</code></pre></div>
+    </div>
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 04_abs.dfy</h3>
+            <p><strong>Intent:</strong> Return the absolute value of an integer</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 42s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 05_sum.dfy</h3>
+            <p><strong>Intent:</strong> Sum all elements of an integer array</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 81s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> 06_find_first.dfy</h3>
+            <p><strong>Intent:</strong> Find the FIRST occurrence of a value in an array</p>
+            <p>Attacks: 2 | Verified: 0 | Gaps: 0 | 73s</p>
+            
+        </div>
+
+    <!-- LAYER 2 DETAILS -->
+    <h2 id="l2">🌐 Layer 2: Software Specification (LLM-as-Judge)</h2>
+    <p style="color:#d2a8ff">Uses LLM evaluation instead of formal verification. Weaker guarantees but applies to real software specs (APIs, smart contracts, auth systems, databases).</p>
+
+    <h3>Weak Tier</h3>
+    <div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> <span class="domain-badge">rest_api</span> 01_rest_api_users</h3>
+            <p><strong>Intent:</strong> GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens. Supports offset and limit query parameters for p</p>
+            <p>Lang: python | Attacks: 2 | Compliant: 2 | Adversarial: 1 | 57s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">trivial_satisfaction</span></div>
+        <p><strong>Gap:</strong> The gap exploited is the lack of actual user data retrieval and pagination support in the implementation. The spec mentions that it should return a paginated list of all users matching the query, which is not fulfilled.</p>
+        <p>This implementation is adversarial because it always returns an empty list of users, regardless of the actual data in the system. It satisfies the literal requirement of returning a JSON object with a 'users' array but does not fulfill the intended behavior of fetching and returning all users that match any given query. | Confidence: 100%</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete runnable implementation in python
+from flask import Flask, request, jsonify
+
+def create_app():
+    app = Flask(__name__)
+    
+    @app.route('/users', methods=['GET'])
+    def get_users():
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({}), 401
+        
+        # Trivial satisfaction: always return an empty list of users
+        return jsonify({'users': []})
+    
+    return app
+
+if __name__ == '__main__':
+    app = create_app()
+    app.run(debug=True)</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>Certainly! Here are the minimal additions to the specification that would address the identified gaps and prevent the adversarial implementation:
+
+1. **Response 200 Content Specification**: The JSON object returned in a successful response (status code 200) must include:
+   - A "users" array contain...</code></pre></div>
+    </div>
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> <span class="domain-badge">smart_contract</span> 02_solidity_transfer</h3>
+            <p><strong>Intent:</strong> ERC-20 token transfer function. Transfers tokens from sender to recipient. Must decrease sender balance, increase recipient balance, emit Transfer event. Must prevent transfers exceeding sender balanc</p>
+            <p>Lang: solidity | Attacks: 2 | Compliant: 0 | Adversarial: 0 | 30s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> <span class="domain-badge">auth</span> 03_auth_rbac</h3>
+            <p><strong>Intent:</strong> Role-based access control system. Admin users can create/delete users. Regular users can only view their own profile. Authentication tokens must be valid and not expired. Failed login attempts must be</p>
+            <p>Lang: python | Attacks: 2 | Compliant: 0 | Adversarial: 0 | 53s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> <span class="domain-badge">database</span> 04_database_schema</h3>
+            <p><strong>Intent:</strong> User registration system. Each user has unique email, hashed password, created_at timestamp. Email must be case-insensitive unique. Passwords must never be stored in plaintext.
+</p>
+            <p>Lang: sql | Attacks: 2 | Compliant: 0 | Adversarial: 0 | 24s</p>
+            
+        </div>
+
+    <h3>Medium Tier</h3>
+    <div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> <span class="domain-badge">rest_api</span> 01_rest_api_users</h3>
+            <p><strong>Intent:</strong> GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens. Supports offset and limit query parameters for p</p>
+            <p>Lang: python | Attacks: 2 | Compliant: 1 | Adversarial: 1 | 54s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">trivial_satisfaction</span></div>
+        <p><strong>Gap:</strong> The gap exploited is that while the spec mentions 'Returns a paginated list of ALL users matching the query', the implementation does not actually fetch or return any user data, instead returning hardcoded values.</p>
+        <p>This implementation literally satisfies the spec by returning a hardcoded response with an empty list of users, correct total count (0), and the provided offset and limit. It also correctly handles authentication by returning a 401 Unauthorized error if the Bearer token is missing or invalid. However, it completely ignores the query parameters for filtering users and does not actually fetch any user data, which violates the intended behavior of returning a paginated list of all users matching the query. | Confidence: 100%</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete runnable implementation in python
+import flask
+from flask import Flask, request, jsonify
+
+def create_app():
+    app = Flask(__name__)
+    
+    @app.route('/users', methods=['GET'])
+    def get_users():
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"error": "Unauthorized"}), 401
+        
+        offset = int(request.args.get('offset', 0))
+        limit = int(request.args.get('limit', 20))
+        
+        # Return hardcoded values satisfying the spec's output format
+        response = {
+            "users": [],
+            "total": 0,
+            "offset": offset,
+            "limit": limit
+        }
+        return jsonify(response), 200
+    
+    return app
+
+if __name__ == '__main__':
+    app = create_app()
+    app.run(debug=True)</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>Certainly! To address the gap and ensure that the implementation actually returns a paginated list of all users, we can add the following minimal additions to the specification:
+
+1. **Response Body Content**: The response body must contain an array of user objects under the "users" key. Each user ob...</code></pre></div>
+    </div>
+        </div><div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> <span class="domain-badge">smart_contract</span> 02_solidity_transfer</h3>
+            <p><strong>Intent:</strong> ERC-20 token transfer function. Transfers tokens from sender to recipient. Must decrease sender balance, increase recipient balance, emit Transfer event. Must prevent transfers exceeding sender balanc</p>
+            <p>Lang: solidity | Attacks: 2 | Compliant: 1 | Adversarial: 1 | 50s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">security_bypass</span></div>
+        <p><strong>Gap:</strong> The requirement to be safe against reentrancy was not addressed in the provided implementation.</p>
+        <p>This implementation satisfies all the literal requirements stated in the specification. It checks that the recipient is not a zero address and that the sender has enough balance before performing the transfer. However, it does not implement any security measures against reentrancy attacks, which could allow an attacker to drain the token balance through repeated calls during the same transaction. | Confidence: 100%</p>
+        <details><summary>Adversarial Code</summary><pre><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract Token {
+    mapping(address =&gt; uint256) public balances;
+
+event Transfer(address indexed from, address indexed to, uint256 amount);
+
+constructor(uint256 initialSupply) {
+        balances[msg.sender] = initialSupply;
+    }
+
+function transfer(address to, uint256 amount) public returns (bool) {
+        require(to != address(0), "Invalid recipient");
+        require(balances[msg.sender] &gt;= amount, "Insufficient balance");
+
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+
+        emit Transfer(msg.sender, to, amount);
+        return true;
+    }
+}</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>To address the reentrancy vulnerability and ensure the function is safe against such attacks, we need to add a requirement that explicitly mandates non-reentrant behavior for the `transfer` function. Here are the minimal additions to the specification:
+
+1. **The `transfer` function must be marked as...</code></pre></div>
+    </div>
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> <span class="domain-badge">auth</span> 03_auth_rbac</h3>
+            <p><strong>Intent:</strong> Role-based access control system. Admin users can create/delete users. Regular users can only view their own profile. Authentication tokens must be valid and not expired. Failed login attempts must be</p>
+            <p>Lang: python | Attacks: 2 | Compliant: 0 | Adversarial: 0 | 66s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> <span class="domain-badge">database</span> 04_database_schema</h3>
+            <p><strong>Intent:</strong> User registration system. Each user has unique email, hashed password, created_at timestamp. Email must be case-insensitive unique. Passwords must never be stored in plaintext.
+</p>
+            <p>Lang: sql | Attacks: 2 | Compliant: 0 | Adversarial: 0 | 28s</p>
+            
+        </div>
+
+    <h3>Strong Tier</h3>
+    <div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> <span class="domain-badge">rest_api</span> 01_rest_api_users</h3>
+            <p><strong>Intent:</strong> GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens. Supports offset and limit query parameters for p</p>
+            <p>Lang: python | Attacks: 2 | Compliant: 1 | Adversarial: 1 | 70s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">trivial_satisfaction</span></div>
+        <p><strong>Gap:</strong> The gap exploited here is the lack of actual user data retrieval logic in the implementation. The specification mentions returning 'ALL users matching the query', but the provided code does not include any mechanism to fetch or filter user data based on queries.</p>
+        <p>This implementation satisfies the specification literally by checking for a Bearer token and returning the correct HTTP status codes and JSON formats. However, it does not perform any actual user retrieval or pagination. It always returns an empty list of users with a total count of 0, regardless of the offset and limit parameters. | Confidence: 100%</p>
+        <details><summary>Adversarial Code</summary><pre><code>// Complete runnable implementation in python
+import flask
+from flask import request, jsonify
+app = flask.Flask(__name__)
+
+def check_auth(token):
+    # Always return True for simplicity of trivial satisfaction
+    return True
+
+@app.route('/users', methods=['GET'])
+def get_users():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth_header.split(' ')[1]
+    if not check_auth(token):
+        return jsonify({"error": "Unauthorized"}), 401
+    offset = int(request.args.get('offset', 0))
+    limit = int(request.args.get('limit', 20))
+    # Return empty list and hardcoded values for total, offset, limit
+    return jsonify({"users": [], "total": 0, "offset": offset, "limit": limit})
+
+if __name__ == '__main__':
+    app.run(debug=True)</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>Certainly! Here are some minimal additions to the specification that would help ensure the implementation retrieves and returns actual user data:
+
+1. **Data Retrieval Requirement**:
+   - The endpoint must retrieve a list of users from the database or data source.
+   
+2. **User Data Format**:
+   - Ea...</code></pre></div>
+    </div>
+        </div><div class="spec-card has-gaps">
+            <h3><span class="tag tag-gap">GAPS</span> <span class="domain-badge">smart_contract</span> 02_solidity_transfer</h3>
+            <p><strong>Intent:</strong> ERC-20 token transfer function. Transfers tokens from sender to recipient. Must decrease sender balance, increase recipient balance, emit Transfer event. Must prevent transfers exceeding sender balanc</p>
+            <p>Lang: solidity | Attacks: 2 | Compliant: 1 | Adversarial: 1 | 45s</p>
+            <div class="gap">
+        <div class="gap-header"><span class="strategy-badge">edge_case_exploitation</span></div>
+        <p><strong>Gap:</strong> The specification explicitly mentions that the function must be safe against reentrancy, but the provided implementation lacks any form of reentrancy protection.</p>
+        <p>This implementation satisfies all the literal requirements of the specification. It checks that the recipient is not the zero address, ensures the sender has sufficient balance, decreases the sender's balance, increases the recipient's balance, and emits a Transfer event. However, it does not handle potential reentrancy attacks, which violates the intended safety requirement. | Confidence: 100%</p>
+        <details><summary>Adversarial Code</summary><pre><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract ERC20Adversarial {
+    mapping(address =&gt; uint256) public balances;
+
+event Transfer(address indexed from, address indexed to, uint256 value);
+
+constructor(uint256 initialSupply) {
+        balances[msg.sender] = initialSupply;
+    }
+
+function transfer(address to, uint256 amount) public returns (bool) {
+        require(to != address(0), "ERC20: transfer to the zero address");
+        require(balances[msg.sender] &gt;= amount, "ERC20: transfer amount exceeds balance");
+
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+
+        emit Transfer(msg.sender, to, amount);
+
+        return true;
+    }
+}</code></pre></details>
+        <div class="fix"><div class="fix-label">Suggested Fix:</div><pre><code>To address the identified gap regarding reentrancy safety in the `transfer` function, we need to explicitly specify requirements that ensure the function is protected against reentrancy attacks. Here are the minimal additions to the specification:
+
+1. **Reentrancy Protection**: The `transfer` functi...</code></pre></div>
+    </div>
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> <span class="domain-badge">auth</span> 03_auth_rbac</h3>
+            <p><strong>Intent:</strong> Role-based access control system. Admin users can create/delete users. Regular users can only view their own profile. Authentication tokens must be valid and not expired. Failed login attempts must be</p>
+            <p>Lang: python | Attacks: 1 | Compliant: 0 | Adversarial: 0 | 52s</p>
+            
+        </div><div class="spec-card no-gaps">
+            <h3><span class="tag tag-ok">OK</span> <span class="domain-badge">database</span> 04_database_schema</h3>
+            <p><strong>Intent:</strong> User registration system. Each user has unique email, hashed password, created_at timestamp. Email must be case-insensitive unique (no two users with same email differing only by case). Passwords must</p>
+            <p>Lang: sql | Attacks: 2 | Compliant: 0 | Adversarial: 0 | 26s</p>
+            
+        </div>
+
+    <!-- REFINEMENT -->
+    <h2 id="refinement">🔄 Iterative Refinement: Attack → Fix → Re-attack → Converge</h2>
+    <p>The core demo: adversarial feedback strengthens specs until no more gaps can be found.</p>
+    <div class="stats">
+        <div class="stat success"><div class="stat-value">6/6</div><div class="stat-label">Converged</div></div>
+        <div class="stat danger"><div class="stat-value">5</div><div class="stat-label">Gaps Found</div></div>
+        <div class="stat success"><div class="stat-value">4</div><div class="stat-label">Gaps Closed</div></div>
+    </div>
+    <div class="spec-card" style="border-left:4px solid #7ee787">
+            <h3>01_sort.dfy — <span style="color:#7ee787">✓ CONVERGED</span></h3>
+            <p>Intent: Sort an array of integers in ascending order, preserving all elements</p>
+            <p>Gap trajectory: <strong>1 → 0</strong> | Total gaps: 1 | Closed: 1 | 145s</p>
+            <table style="width:100%;margin-top:0.5em;border-collapse:collapse">
+                <tr style="color:#8b949e;text-align:left"><th>Iter</th><th>Gaps</th><th>Fix Applied</th><th>Time</th></tr>
+                <tr><td>1</td><td>1</td><td style="font-size:0.8em">ensures multiset(a[..]) == multiset(old(a)[..])</td><td>68s</td></tr><tr><td>2</td><td>0</td><td style="font-size:0.8em">—</td><td>76s</td></tr>
+            </table>
+        </div><div class="spec-card" style="border-left:4px solid #7ee787">
+            <h3>02_binary_search.dfy — <span style="color:#7ee787">✓ CONVERGED</span></h3>
+            <p>Intent: Find target in sorted array, return index or -1 if not found</p>
+            <p>Gap trajectory: <strong>0</strong> | Total gaps: 0 | Closed: 0 | 92s</p>
+            <table style="width:100%;margin-top:0.5em;border-collapse:collapse">
+                <tr style="color:#8b949e;text-align:left"><th>Iter</th><th>Gaps</th><th>Fix Applied</th><th>Time</th></tr>
+                <tr><td>1</td><td>0</td><td style="font-size:0.8em">—</td><td>92s</td></tr>
+            </table>
+        </div><div class="spec-card" style="border-left:4px solid #7ee787">
+            <h3>03_max.dfy — <span style="color:#7ee787">✓ CONVERGED</span></h3>
+            <p>Intent: Return the maximum element of a non-empty array</p>
+            <p>Gap trajectory: <strong>1 → 0</strong> | Total gaps: 1 | Closed: 1 | 129s</p>
+            <table style="width:100%;margin-top:0.5em;border-collapse:collapse">
+                <tr style="color:#8b949e;text-align:left"><th>Iter</th><th>Gaps</th><th>Fix Applied</th><th>Time</th></tr>
+                <tr><td>1</td><td>1</td><td style="font-size:0.8em">ensures forall i :: 0 &lt;= i &lt; a.Length ==&gt; m &gt;= a[i]</td><td>42s</td></tr><tr><td>2</td><td>0</td><td style="font-size:0.8em">—</td><td>88s</td></tr>
+            </table>
+        </div><div class="spec-card" style="border-left:4px solid #7ee787">
+            <h3>04_abs.dfy — <span style="color:#7ee787">✓ CONVERGED</span></h3>
+            <p>Intent: Return the absolute value of an integer</p>
+            <p>Gap trajectory: <strong>1 → 0</strong> | Total gaps: 1 | Closed: 1 | 97s</p>
+            <table style="width:100%;margin-top:0.5em;border-collapse:collapse">
+                <tr style="color:#8b949e;text-align:left"><th>Iter</th><th>Gaps</th><th>Fix Applied</th><th>Time</th></tr>
+                <tr><td>1</td><td>1</td><td style="font-size:0.8em">ensures x &lt; 0 ==&gt; result == -x</td><td>35s</td></tr><tr><td>2</td><td>0</td><td style="font-size:0.8em">—</td><td>62s</td></tr>
+            </table>
+        </div><div class="spec-card" style="border-left:4px solid #7ee787">
+            <h3>05_sum.dfy — <span style="color:#7ee787">✓ CONVERGED</span></h3>
+            <p>Intent: Sum all elements of an integer array</p>
+            <p>Gap trajectory: <strong>2 → 0</strong> | Total gaps: 2 | Closed: 1 | 66s</p>
+            <table style="width:100%;margin-top:0.5em;border-collapse:collapse">
+                <tr style="color:#8b949e;text-align:left"><th>Iter</th><th>Gaps</th><th>Fix Applied</th><th>Time</th></tr>
+                <tr><td>1</td><td>2</td><td style="font-size:0.8em">ensures s == sum(a)</td><td>18s</td></tr><tr><td>2</td><td>0</td><td style="font-size:0.8em">—</td><td>48s</td></tr>
+            </table>
+        </div><div class="spec-card" style="border-left:4px solid #7ee787">
+            <h3>06_find_first.dfy — <span style="color:#7ee787">✓ CONVERGED</span></h3>
+            <p>Intent: Find the first occurrence of a value in an array</p>
+            <p>Gap trajectory: <strong>0</strong> | Total gaps: 0 | Closed: 0 | 63s</p>
+            <table style="width:100%;margin-top:0.5em;border-collapse:collapse">
+                <tr style="color:#8b949e;text-align:left"><th>Iter</th><th>Gaps</th><th>Fix Applied</th><th>Time</th></tr>
+                <tr><td>1</td><td>0</td><td style="font-size:0.8em">—</td><td>63s</td></tr>
+            </table>
+        </div>
+
+    <!-- TAXONOMY -->
+    <h2 id="taxonomy">📋 Gap Taxonomy</h2>
+    <p>Categorized gap patterns — useful for spec linting and training data.</p>
+    <div class="stats"><div class="stat danger"><div class="stat-value">12</div><div class="stat-label">Total Cataloged Gaps</div></div>
+        <div class="stat"><div class="stat-value">6</div><div class="stat-label">Gap Categories</div></div></div>
+        <p><strong>Severity:</strong> critical: 6 | medium: 6</p>
+        <p><strong>Domains:</strong> dafny: 7 | rest_api: 3 | smart_contract: 2</p>
+        <div class="spec-card" style="border-left:4px solid #f85149">
+            <h3>Missing Preservation <span style="color:#f85149;font-size:0.8em">(CRITICAL)</span></h3>
+            <p>Spec doesn't ensure input elements are preserved in output</p>
+            <p>Count: 3 | Specs: 03_max.dfy, 05_sum.dfy, 03_max.dfy | Strategies: edge_case_exploitation, trivial_satisfaction</p>
+        </div><div class="spec-card" style="border-left:4px solid #d2a8ff">
+            <h3>Uncategorized <span style="color:#d2a8ff;font-size:0.8em">(MEDIUM)</span></h3>
+            <p>Unknown</p>
+            <p>Count: 3 | Specs: 01_rest_api_users | Strategies: trivial_satisfaction</p>
+        </div><div class="spec-card" style="border-left:4px solid #d2a8ff">
+            <h3>Missing Negative Case <span style="color:#d2a8ff;font-size:0.8em">(MEDIUM)</span></h3>
+            <p>Spec handles positive case but not negative</p>
+            <p>Count: 2 | Specs: 04_abs.dfy, 04_abs.dfy | Strategies: edge_case_exploitation, trivial_satisfaction</p>
+        </div><div class="spec-card" style="border-left:4px solid #f85149">
+            <h3>Missing Reentrancy Guard <span style="color:#f85149;font-size:0.8em">(CRITICAL)</span></h3>
+            <p>No reentrancy protection in state-modifying operation</p>
+            <p>Count: 2 | Specs: 02_solidity_transfer | Strategies: security_bypass, edge_case_exploitation</p>
+        </div><div class="spec-card" style="border-left:4px solid #f85149">
+            <h3>Tautological Constraint <span style="color:#f85149;font-size:0.8em">(CRITICAL)</span></h3>
+            <p>Postcondition is a tautology that constrains nothing</p>
+            <p>Count: 1 | Specs: 05_sum.dfy | Strategies: trivial_satisfaction</p>
+        </div><div class="spec-card" style="border-left:4px solid #d2a8ff">
+            <h3>Missing Bound <span style="color:#d2a8ff;font-size:0.8em">(MEDIUM)</span></h3>
+            <p>Spec requires a bound property but not that result comes from the input</p>
+            <p>Count: 1 | Specs: 05_sum.dfy | Strategies: trivial_satisfaction</p>
+        </div>
+
+    <!-- ARCHITECTURE -->
+    <h2 id="arch">🏗️ Architecture</h2>
+    <div class="arch">NL Intent + Formal Spec
+        │
+        ▼
+┌──────────────────────┐     ┌─────────────┐
+│  Adversarial Impl    │────▶│   Dafny     │
+│  Generator (LLM)     │     │   Verifier  │
+│  Strategies:         │     └──────┬──────┘
+│  - Trivial Satisfy   │           │
+│  - Edge Case Exploit │    ┌──────┴──────┐
+│  - Security Bypass   │    │ VERIFIED?   │
+│  - Vacuous Satisfy   │    ├─YES─────────┤
+└──────────────────────┘    │ Behavioral  │
+                            │ Test Filter │
+                            ├─FAIL────────┤
+                            │ CONFIRMED   │
+                            │ SPEC GAP    │
+                            ├─────────────┤
+                            │ Gap Report  │
+                            │ + Spec Fix  │
+                            └─────────────┘
+                                  │
+                            ┌─────▼─────┐
+                            │ Iterate   │
+                            │ until no  │
+                            │ gaps found│
+                            └───────────┘</div>
+
+    <h2>Limitations</h2>
+    <ul style="margin:1rem 0;padding-left:1.5rem">
+        <li><strong>False negatives:</strong> LLM may miss spec gaps. Tool finds gaps, doesn't prove absence.</li>
+        <li><strong>Dafny-specific:</strong> Layer 1 requires Dafny. Concept generalizes to any spec language with verifier.</li>
+        <li><strong>Test oracle is finite:</strong> Behavioral filter confirms adversarial behavior via test cases, not formal proof.</li>
+        <li><strong>LLM-as-Judge (L2):</strong> Weaker than formal verification. Subject to LLM judgment errors.</li>
+        <li><strong>Strong tier false positive:</strong> Qwen generated correct max impl but labeled it adversarial.</li>
+    </ul>
+
+    <footer>
+        <p><strong>SpecSaboteur</strong> — Adversarial Specification Validation for Secure Program Synthesis</p>
+        <p>Apart Research × Atlas Computing Hackathon 2026 | Model: Qwen2.5-Coder-32B-Instruct (Q4_K_M) via Ollama on NVIDIA L40S</p>
+        <p>GitHub: <a href="https://github.com/Raj-Taware/specsaboteur" style="color:#58a6ff">github.com/Raj-Taware/specsaboteur</a></p>
+    </footer>
+</div>
+</body>
+</html>

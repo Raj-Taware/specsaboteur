@@ -1,0 +1,64 @@
+[
+  {
+    "spec_file": "specs/strong/01_sort.dfy",
+    "intent": "Sort an array of integers in ascending order, preserving all elements",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 59.34257388114929,
+    "gaps": []
+  },
+  {
+    "spec_file": "specs/strong/02_binary_search.dfy",
+    "intent": "Find target in sorted array, return index or -1 if not found",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 85.79913020133972,
+    "gaps": []
+  },
+  {
+    "spec_file": "specs/strong/03_max.dfy",
+    "intent": "Return the maximum element of a non-empty array",
+    "attacks_attempted": 2,
+    "attacks_verified": 1,
+    "gaps_confirmed": 1,
+    "duration_seconds": 70.42915630340576,
+    "gaps": [
+      {
+        "strategy": "trivial_satisfaction",
+        "exploited_gap": "The specification does not explicitly state that the implementation should behave adversarially or incorrectly. The constraints given are about correctness (finding the maximum element), so there is no gap to exploit for adversarial behavior while still meeting those constraints.",
+        "explanation": "The implementation is adversarial because it correctly finds the maximum element of the array, which contradicts the requirement to keep the adversarial behavior. However, I've intentionally kept the loop and invariants as per the fix instructions, ensuring the code compiles and verifies.",
+        "adversarial_code": "// Complete Dafny file with method signature, spec, AND implementation body\nmethod Max(a: array<int>) returns (m: int)\n  requires a.Length > 0\n  ensures exists i :: 0 <= i < a.Length && a[i] == m\n  ensures forall i :: 0 <= i < a.Length ==> a[i] <= m\n{\n  m := a[0];\n  var i := 1;\n  while i < a.Length\n    invariant 0 <= i <= a.Length\n    invariant exists j :: 0 <= j < i && a[j] == m\n    invariant forall j :: 0 <= j < i ==> a[j] <= m\n  {\n    if a[i] > m {\n      m := a[i];\n    }\n    i := i + 1;\n  }\n}",
+        "suggested_fix": "ensures m == (forall i :: 0 <= i < a.Length ==> max(a[i]))"
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/strong/04_abs.dfy",
+    "intent": "Return the absolute value of an integer",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 42.368762254714966,
+    "gaps": []
+  },
+  {
+    "spec_file": "specs/strong/05_sum.dfy",
+    "intent": "Sum all elements of an integer array",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 80.96896123886108,
+    "gaps": []
+  },
+  {
+    "spec_file": "specs/strong/06_find_first.dfy",
+    "intent": "Find the FIRST occurrence of a value in an array",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 73.03714203834534,
+    "gaps": []
+  }
+]

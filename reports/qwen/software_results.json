@@ -1,0 +1,56 @@
+[
+  {
+    "spec_name": "01_rest_api_users",
+    "domain": "rest_api",
+    "language": "python",
+    "intent": "GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens. Supports offset and limit query parameters for pagination.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 2,
+    "attacks_adversarial": 1,
+    "duration_seconds": 56.72142457962036,
+    "gaps": [
+      {
+        "strategy": "trivial_satisfaction",
+        "exploited_gap": "The gap exploited is the lack of actual user data retrieval and pagination support in the implementation. The spec mentions that it should return a paginated list of all users matching the query, which is not fulfilled.",
+        "explanation": "This implementation is adversarial because it always returns an empty list of users, regardless of the actual data in the system. It satisfies the literal requirement of returning a JSON object with a 'users' array but does not fulfill the intended behavior of fetching and returning all users that match any given query.",
+        "adversarial_code": "// Complete runnable implementation in python\nfrom flask import Flask, request, jsonify\n\ndef create_app():\n    app = Flask(__name__)\n    \n    @app.route('/users', methods=['GET'])\n    def get_users():\n        auth_header = request.headers.get('Authorization')\n        if not auth_header or not auth_header.startswith('Bearer '):\n            return jsonify({}), 401\n        \n        # Trivial satisfaction: always return an empty list of users\n        return jsonify({'users': []})\n    \n    return app\n\nif __name__ == '__main__':\n    app = create_app()\n    app.run(debug=True)",
+        "suggested_fix": "Certainly! Here are the minimal additions to the specification that would address the identified gaps and prevent the adversarial implementation:\n\n1. **Response 200 Content Specification**: The JSON object returned in a successful response (status code 200) must include:\n   - A \"users\" array containing user objects.\n   - Each user object should have at least an \"id\" field uniquely identifying the user.\n   - An optional \"total_users\" integer indicating the total number of users available.\n   - Optional pagination metadata fields: \"offset\", \"limit\", and \"next_page_url\".\n\n2. **Query Parameters**:\n   - The endpoint must support `offset` and `limit` query parameters for pagination.\n     - `offset`: Integer specifying the starting point in the list of users to return (default 0).\n     - `limit`: Integer specifying the maximum number of users to return per request (default 10, max 100).\n\n3. **Response Examples**:\n   - Example response when no query parameters are provided:\n     ```json\n     {\n       \"users\": [\n         {\"id\": 1, \"name\": \"John Doe\"},\n         {\"id\": 2, \"name\": \"Jane Smith\"}\n       ],\n       \"total_users\": 50,\n       \"offset\": 0,\n       \"limit\": 10,\n       \"next_page_url\": \"/users?offset=10&limit=10\"\n     }\n     ```\n   - Example response when `offset` is 10 and `limit` is 10:\n     ```json\n     {\n       \"users\": [\n         {\"id\": 3, \"name\": \"Alice Johnson\"},\n         {\"id\": 4, \"name\": \"Bob Brown\"}\n       ],\n       \"total_users\": 50,\n       \"offset\": 10,\n       \"limit\": 10,\n       \"next_page_url\": \"/users?offset=20&limit=10\"\n     }\n     ```\n\n4. **Error Handling**:\n   - When `offset` or `limit` are provided but invalid (e.g., negative numbers, non-integer values), the server must return a 400 Bad Request response with an appropriate error message.\n\nBy adding these requirements, the specification will clearly define what data should be returned and how pagination should work, thus preventing implementations that do not fulfill the intended functionality.",
+        "judge_compliant": true,
+        "judge_confidence": 1.0
+      }
+    ]
+  },
+  {
+    "spec_name": "02_solidity_transfer",
+    "domain": "smart_contract",
+    "language": "solidity",
+    "intent": "ERC-20 token transfer function. Transfers tokens from sender to recipient. Must decrease sender balance, increase recipient balance, emit Transfer event. Must prevent transfers exceeding sender balance. Must be safe against reentrancy.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 30.228495836257935,
+    "gaps": []
+  },
+  {
+    "spec_name": "03_auth_rbac",
+    "domain": "auth",
+    "language": "python",
+    "intent": "Role-based access control system. Admin users can create/delete users. Regular users can only view their own profile. Authentication tokens must be valid and not expired. Failed login attempts must be rate-limited.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 52.59698534011841,
+    "gaps": []
+  },
+  {
+    "spec_name": "04_database_schema",
+    "domain": "database",
+    "language": "sql",
+    "intent": "User registration system. Each user has unique email, hashed password, created_at timestamp. Email must be case-insensitive unique. Passwords must never be stored in plaintext.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 23.723288774490356,
+    "gaps": []
+  }
+]

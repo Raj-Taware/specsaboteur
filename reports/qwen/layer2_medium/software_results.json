@@ -1,0 +1,66 @@
+[
+  {
+    "spec_name": "01_rest_api_users",
+    "domain": "rest_api",
+    "language": "python",
+    "intent": "GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens. Supports offset and limit query parameters for pagination.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 1,
+    "attacks_adversarial": 1,
+    "duration_seconds": 53.923237800598145,
+    "gaps": [
+      {
+        "strategy": "trivial_satisfaction",
+        "exploited_gap": "The gap exploited is that while the spec mentions 'Returns a paginated list of ALL users matching the query', the implementation does not actually fetch or return any user data, instead returning hardcoded values.",
+        "explanation": "This implementation literally satisfies the spec by returning a hardcoded response with an empty list of users, correct total count (0), and the provided offset and limit. It also correctly handles authentication by returning a 401 Unauthorized error if the Bearer token is missing or invalid. However, it completely ignores the query parameters for filtering users and does not actually fetch any user data, which violates the intended behavior of returning a paginated list of all users matching the query.",
+        "adversarial_code": "// Complete runnable implementation in python\nimport flask\nfrom flask import Flask, request, jsonify\n\ndef create_app():\n    app = Flask(__name__)\n    \n    @app.route('/users', methods=['GET'])\n    def get_users():\n        auth_header = request.headers.get('Authorization')\n        if not auth_header or not auth_header.startswith('Bearer '):\n            return jsonify({\"error\": \"Unauthorized\"}), 401\n        \n        offset = int(request.args.get('offset', 0))\n        limit = int(request.args.get('limit', 20))\n        \n        # Return hardcoded values satisfying the spec's output format\n        response = {\n            \"users\": [],\n            \"total\": 0,\n            \"offset\": offset,\n            \"limit\": limit\n        }\n        return jsonify(response), 200\n    \n    return app\n\nif __name__ == '__main__':\n    app = create_app()\n    app.run(debug=True)",
+        "suggested_fix": "Certainly! To address the gap and ensure that the implementation actually returns a paginated list of all users, we can add the following minimal additions to the specification:\n\n1. **Response Body Content**: The response body must contain an array of user objects under the \"users\" key. Each user object should include at least one identifying attribute (e.g., `id`, `username`).\n\n2. **Total Count Accuracy**: The value of the \"total\" field in the response body must accurately reflect the total number of users available, regardless of pagination.\n\n3. **Pagination Behavior**: When the `offset` and `limit` query parameters are provided, the endpoint must return a subset of users starting from the specified offset up to the specified limit, ensuring that the returned list is consistent with the \"total\" count.\n\n4. **User Object Structure**: Define a minimum set of attributes that each user object in the response body must include (e.g., `id`, `username`).\n\nHere's how these requirements can be concretely added to the specification:\n\n## Updated Specification\n\n### Endpoint: GET /users\n- **Authentication**: Bearer token in Authorization header (required)\n- **Query Parameters**:\n  - `offset` (int, default 0): starting index\n  - `limit` (int, default 20): max items to return\n\n### Response 200:\n- **Content-Type**: application/json\n- **Body**:\n  ```json\n  {\n    \"users\": [\n      {\n        \"id\": int,\n        \"username\": string\n        // Add other user attributes as necessary\n      },\n      ...\n    ],\n    \"total\": int,\n    \"offset\": int,\n    \"limit\": int\n  }\n  ```\n\n### Response 401:\n- **Body**:\n  ```json\n  { \"error\": \"Unauthorized\" }\n  ```\n\n### Additional Requirements:\n1. The response body must contain an array of user objects under the \"users\" key. Each user object should include at least `id` and `username`.\n2. The value of the \"total\" field in the response body must accurately reflect the total number of users available, regardless of pagination.\n3. When the `offset` and `limit` query parameters are provided, the endpoint must return a subset of users starting from the specified offset up to the specified limit, ensuring that the returned list is consistent with the \"total\" count.\n\nThese additions ensure that the implementation not only adheres to the format but also provides meaningful data as intended.",
+        "judge_compliant": true,
+        "judge_confidence": 1.0
+      }
+    ]
+  },
+  {
+    "spec_name": "02_solidity_transfer",
+    "domain": "smart_contract",
+    "language": "solidity",
+    "intent": "ERC-20 token transfer function. Transfers tokens from sender to recipient. Must decrease sender balance, increase recipient balance, emit Transfer event. Must prevent transfers exceeding sender balance. Must be safe against reentrancy.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 1,
+    "attacks_adversarial": 1,
+    "duration_seconds": 49.875484466552734,
+    "gaps": [
+      {
+        "strategy": "security_bypass",
+        "exploited_gap": "The requirement to be safe against reentrancy was not addressed in the provided implementation.",
+        "explanation": "This implementation satisfies all the literal requirements stated in the specification. It checks that the recipient is not a zero address and that the sender has enough balance before performing the transfer. However, it does not implement any security measures against reentrancy attacks, which could allow an attacker to drain the token balance through repeated calls during the same transaction.",
+        "adversarial_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract Token {\n    mapping(address => uint256) public balances;\n\nevent Transfer(address indexed from, address indexed to, uint256 amount);\n\nconstructor(uint256 initialSupply) {\n        balances[msg.sender] = initialSupply;\n    }\n\nfunction transfer(address to, uint256 amount) public returns (bool) {\n        require(to != address(0), \"Invalid recipient\");\n        require(balances[msg.sender] >= amount, \"Insufficient balance\");\n\n        balances[msg.sender] -= amount;\n        balances[to] += amount;\n\n        emit Transfer(msg.sender, to, amount);\n        return true;\n    }\n}",
+        "suggested_fix": "To address the reentrancy vulnerability and ensure the function is safe against such attacks, we need to add a requirement that explicitly mandates non-reentrant behavior for the `transfer` function. Here are the minimal additions to the specification:\n\n1. **The `transfer` function must be marked as non-reentrant to prevent reentrancy attacks.**\n\nThis can be achieved by using a modifier like `nonReentrant` from OpenZeppelin's ReentrancyGuard library or implementing a similar mechanism.\n\nHere is how you could incorporate this requirement into the specification:\n\n## Updated Specification\n```markdown\nfunction transfer(address to, uint256 amount) public nonReentrant returns (bool)\nRequirements:\n  - msg.sender must have balance >= amount\n  - to must not be zero address\n  - The `transfer` function must be marked as non-reentrant to prevent reentrancy attacks.\nEffects:\n  - balances[msg.sender] decreases by amount\n  - balances[to] increases by amount\n  - emits Transfer(msg.sender, to, amount)\n  - returns true on success\n```\n\n## Concrete, Testable Requirements\n\n1. **The `transfer` function must be marked with a non-reentrant modifier to prevent reentrancy attacks.**\n\nThis requirement can be tested by attempting to perform a reentrancy attack and verifying that the attack is blocked or fails.\n\n2. **The contract must include a non-reentrant mechanism, such as using OpenZeppelin's ReentrancyGuard library.**\n\nThis requirement ensures that the necessary tools are in place to prevent reentrancy attacks. It can be tested by checking if the `ReentrancyGuard` library is imported and used correctly.\n\nBy adding these requirements, we ensure that the function is not susceptible to reentrancy attacks, aligning with the natural language intent of the specification.",
+        "judge_compliant": true,
+        "judge_confidence": 1.0
+      }
+    ]
+  },
+  {
+    "spec_name": "03_auth_rbac",
+    "domain": "auth",
+    "language": "python",
+    "intent": "Role-based access control system. Admin users can create/delete users. Regular users can only view their own profile. Authentication tokens must be valid and not expired. Failed login attempts must be rate-limited.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 66.47023558616638,
+    "gaps": []
+  },
+  {
+    "spec_name": "04_database_schema",
+    "domain": "database",
+    "language": "sql",
+    "intent": "User registration system. Each user has unique email, hashed password, created_at timestamp. Email must be case-insensitive unique. Passwords must never be stored in plaintext.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 27.874229669570923,
+    "gaps": []
+  }
+]

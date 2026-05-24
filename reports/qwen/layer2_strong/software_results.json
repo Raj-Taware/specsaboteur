@@ -1,0 +1,66 @@
+[
+  {
+    "spec_name": "01_rest_api_users",
+    "domain": "rest_api",
+    "language": "python",
+    "intent": "GET /users endpoint returns a paginated list of ALL users matching the query. Requires valid Bearer auth token. Returns 401 for invalid/missing tokens. Supports offset and limit query parameters for pagination.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 1,
+    "attacks_adversarial": 1,
+    "duration_seconds": 70.01425743103027,
+    "gaps": [
+      {
+        "strategy": "trivial_satisfaction",
+        "exploited_gap": "The gap exploited here is the lack of actual user data retrieval logic in the implementation. The specification mentions returning 'ALL users matching the query', but the provided code does not include any mechanism to fetch or filter user data based on queries.",
+        "explanation": "This implementation satisfies the specification literally by checking for a Bearer token and returning the correct HTTP status codes and JSON formats. However, it does not perform any actual user retrieval or pagination. It always returns an empty list of users with a total count of 0, regardless of the offset and limit parameters.",
+        "adversarial_code": "// Complete runnable implementation in python\nimport flask\nfrom flask import request, jsonify\napp = flask.Flask(__name__)\n\ndef check_auth(token):\n    # Always return True for simplicity of trivial satisfaction\n    return True\n\n@app.route('/users', methods=['GET'])\ndef get_users():\n    auth_header = request.headers.get('Authorization')\n    if not auth_header or not auth_header.startswith('Bearer '):\n        return jsonify({\"error\": \"Unauthorized\"}), 401\n    token = auth_header.split(' ')[1]\n    if not check_auth(token):\n        return jsonify({\"error\": \"Unauthorized\"}), 401\n    offset = int(request.args.get('offset', 0))\n    limit = int(request.args.get('limit', 20))\n    # Return empty list and hardcoded values for total, offset, limit\n    return jsonify({\"users\": [], \"total\": 0, \"offset\": offset, \"limit\": limit})\n\nif __name__ == '__main__':\n    app.run(debug=True)",
+        "suggested_fix": "Certainly! Here are some minimal additions to the specification that would help ensure the implementation retrieves and returns actual user data:\n\n1. **Data Retrieval Requirement**:\n   - The endpoint must retrieve a list of users from the database or data source.\n   \n2. **User Data Format**:\n   - Each user in the \"users\" array should have at least the following fields: `id`, `name`, and `email`.\n   \n3. **Pagination Implementation**:\n   - The implementation must correctly apply the `offset` and `limit` query parameters to paginate through the list of users.\n   \n4. **Total Count Accuracy**:\n   - The \"total\" field in the response should accurately reflect the total number of users available, regardless of pagination.\n\n5. **Empty Response Handling**:\n   - If no users are found (e.g., due to filtering or an empty database), the \"users\" array should be an empty list (`[]`), but the \"total\" field should still indicate the correct count of users that would have been returned if any were available.\n\n6. **Error Handling for Data Retrieval**:\n   - In case of a failure to retrieve user data (e.g., database connection error), the endpoint must return an appropriate HTTP status code and error message, such as 500 Internal Server Error with a JSON body containing an \"error\" field describing the issue.\n\n7. **Security Considerations**:\n   - Ensure that sensitive user information is not exposed in the response.\n   \nHere\u2019s how these requirements could be integrated into the specification:\n\n---\n\n## Updated Specification\n\n### Endpoint: GET /users\n- **Authentication**: Bearer token in Authorization header (required)\n- **Query Parameters**:\n  - `offset` (int, default 0): starting index\n  - `limit` (int, default 20): max items to return\n- **Response 200**:\n  - Content-Type: application/json\n  - Body: \n    ```json\n    { \n      \"users\": [\n        {\n          \"id\": int,\n          \"name\": string,\n          \"email\": string\n        },\n        ...\n      ], \n      \"total\": int, \n      \"offset\": int, \n      \"limit\": int \n    }\n    ```\n- **Response 401**:\n  - Body: { \"error\": \"Unauthorized\" }\n- **Response 500** (optional, for error handling):\n  - Body: { \"error\": \"Internal Server Error\" }\n\n### Additional Requirements\n1. The endpoint must retrieve a list of users from the database or data source.\n2. Each user in the \"users\" array should have at least the following fields: `id`, `name`, and `email`.\n3. The implementation must correctly apply the `offset` and `limit` query parameters to paginate through the list of users.\n4. The \"total\" field in the response should accurately reflect the total number of users available, regardless of pagination.\n5. If no users are found (e.g., due to filtering or an empty database), the \"users\" array should be an empty list (`[]`), but the \"total\" field should still indicate the correct count of users that would have been returned if any were available.\n6. In case of a failure to retrieve user data (e.g., database connection error), the endpoint must return an appropriate HTTP status code and error message, such as 500 Internal Server Error with a JSON body containing an \"error\" field describing the issue.\n7. Ensure that sensitive user information is not exposed in the response.\n\n---\n\nThese additions ensure that the implementation adheres to both the functional requirements and the intent of retrieving and returning actual user data.",
+        "judge_compliant": true,
+        "judge_confidence": 1.0
+      }
+    ]
+  },
+  {
+    "spec_name": "02_solidity_transfer",
+    "domain": "smart_contract",
+    "language": "solidity",
+    "intent": "ERC-20 token transfer function. Transfers tokens from sender to recipient. Must decrease sender balance, increase recipient balance, emit Transfer event. Must prevent transfers exceeding sender balance. Must be safe against reentrancy.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 1,
+    "attacks_adversarial": 1,
+    "duration_seconds": 44.59805464744568,
+    "gaps": [
+      {
+        "strategy": "edge_case_exploitation",
+        "exploited_gap": "The specification explicitly mentions that the function must be safe against reentrancy, but the provided implementation lacks any form of reentrancy protection.",
+        "explanation": "This implementation satisfies all the literal requirements of the specification. It checks that the recipient is not the zero address, ensures the sender has sufficient balance, decreases the sender's balance, increases the recipient's balance, and emits a Transfer event. However, it does not handle potential reentrancy attacks, which violates the intended safety requirement.",
+        "adversarial_code": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract ERC20Adversarial {\n    mapping(address => uint256) public balances;\n\nevent Transfer(address indexed from, address indexed to, uint256 value);\n\nconstructor(uint256 initialSupply) {\n        balances[msg.sender] = initialSupply;\n    }\n\nfunction transfer(address to, uint256 amount) public returns (bool) {\n        require(to != address(0), \"ERC20: transfer to the zero address\");\n        require(balances[msg.sender] >= amount, \"ERC20: transfer amount exceeds balance\");\n\n        balances[msg.sender] -= amount;\n        balances[to] += amount;\n\n        emit Transfer(msg.sender, to, amount);\n\n        return true;\n    }\n}",
+        "suggested_fix": "To address the identified gap regarding reentrancy safety in the `transfer` function, we need to explicitly specify requirements that ensure the function is protected against reentrancy attacks. Here are the minimal additions to the specification:\n\n1. **Reentrancy Protection**: The `transfer` function must not be vulnerable to reentrancy attacks. This can be achieved by ensuring that any external calls (if present) occur after all state changes and events have been executed.\n\n2. **No External Calls Before State Changes**: The `transfer` function must perform all internal state changes and event emissions before making any external calls or interactions with other contracts.\n\n3. **Use of Checks-Effects-Interactions Pattern**: The `transfer` function must follow the Checks-Effects-Interactions pattern, where conditions are checked first, then effects (state changes) are made, and finally any interactions (external calls) occur.\n\nGiven that the current implementation does not involve external calls, the primary focus is on ensuring no reentrancy vulnerabilities can be introduced if future modifications include such calls. Here's how these requirements would look in a numbered list:\n\n1. The `transfer` function must follow the Checks-Effects-Interactions pattern to prevent reentrancy attacks.\n2. All state changes and event emissions must occur before any external calls or interactions with other contracts.\n\nThese additions ensure that the specification explicitly covers reentrancy protection, making it clear that future implementations should adhere to best practices for secure contract development.",
+        "judge_compliant": true,
+        "judge_confidence": 1.0
+      }
+    ]
+  },
+  {
+    "spec_name": "03_auth_rbac",
+    "domain": "auth",
+    "language": "python",
+    "intent": "Role-based access control system. Admin users can create/delete users. Regular users can only view their own profile. Authentication tokens must be valid and not expired. Failed login attempts must be rate-limited.\n",
+    "attacks_attempted": 1,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 52.063783407211304,
+    "gaps": []
+  },
+  {
+    "spec_name": "04_database_schema",
+    "domain": "database",
+    "language": "sql",
+    "intent": "User registration system. Each user has unique email, hashed password, created_at timestamp. Email must be case-insensitive unique (no two users with same email differing only by case). Passwords must never be stored in plaintext.\n",
+    "attacks_attempted": 2,
+    "attacks_compliant": 0,
+    "attacks_adversarial": 0,
+    "duration_seconds": 25.945701599121094,
+    "gaps": []
+  }
+]

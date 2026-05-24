@@ -1,0 +1,87 @@
+[
+  {
+    "spec_file": "specs/weak/01_sort.dfy",
+    "intent": "Sort an array of integers in ascending order, preserving all elements",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 106.55814576148987,
+    "gaps": []
+  },
+  {
+    "spec_file": "specs/weak/02_binary_search.dfy",
+    "intent": "Find target in sorted array, return index or -1 if not found",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 69.48940443992615,
+    "gaps": []
+  },
+  {
+    "spec_file": "specs/weak/03_max.dfy",
+    "intent": "Return the maximum element of a non-empty array",
+    "attacks_attempted": 2,
+    "attacks_verified": 1,
+    "gaps_confirmed": 1,
+    "duration_seconds": 40.446117639541626,
+    "gaps": [
+      {
+        "strategy": "trivial_satisfaction",
+        "exploited_gap": "The spec requires the existence of an index where the returned value equals an array element, but it does not enforce that this value is the maximum element in the array.",
+        "explanation": "This implementation is adversarial because it always returns the first element of the array, regardless of whether it is the maximum value. This satisfies the postcondition that there exists an index where the returned value equals the array element at that index, but it does not find the maximum element as intended.",
+        "adversarial_code": "// Complete Dafny file with method signature, spec, AND implementation body\nmethod Max(a: array<int>) returns (m: int)\n  requires a.Length > 0\n  ensures exists i :: 0 <= i < a.Length && a[i] == m\n{\n  // Trivially return the first element of the array\n  return a[0];\n}",
+        "suggested_fix": "ensures forall i :: 0 <= i < a.Length ==> m >= a[i]"
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/weak/04_abs.dfy",
+    "intent": "Return the absolute value of an integer",
+    "attacks_attempted": 2,
+    "attacks_verified": 1,
+    "gaps_confirmed": 1,
+    "duration_seconds": 30.402846574783325,
+    "gaps": [
+      {
+        "strategy": "edge_case_exploitation",
+        "exploited_gap": "The spec only ensures that if x >= 0, then result == x, but it does not specify how to handle the case when x < 0. The implementation exploits this gap by adding 1 to negative numbers instead of making them positive.",
+        "explanation": "This implementation is adversarial because it does not correctly compute the absolute value of a negative integer. Instead, for negative inputs, it returns one more than the input value, which violates the natural language intent of returning the absolute value.",
+        "adversarial_code": "// Complete Dafny file with method signature, spec, AND implementation body\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n{\n  if x < 0 {\n    result := x + 1; // Incorrectly adds 1 to negative numbers\n  } else {\n    result := x;\n  }\n}",
+        "suggested_fix": "ensures x < 0 ==> result == -x"
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/weak/05_sum.dfy",
+    "intent": "Sum all elements of an integer array",
+    "attacks_attempted": 2,
+    "attacks_verified": 2,
+    "gaps_confirmed": 2,
+    "duration_seconds": 16.13242816925049,
+    "gaps": [
+      {
+        "strategy": "trivial_satisfaction",
+        "exploited_gap": "The postcondition 's >= 0 || s < 0' is vacuously true for any integer and does not enforce that the returned value should be the sum of the array elements.",
+        "explanation": "This implementation is adversarial because it always returns the hardcoded value 42, regardless of the input array. This clearly does not sum the elements of the array as intended.",
+        "adversarial_code": "// Complete Dafny file with method signature, spec, AND implementation body\nmethod Sum(a: array<int>) returns (s: int)\n  ensures s >= 0 || s < 0  // vacuously true - accepts any integer\n{\n  s := 42;\n}",
+        "suggested_fix": "ensures s == sum(a)"
+      },
+      {
+        "strategy": "edge_case_exploitation",
+        "exploited_gap": "The specification does not specify that all elements of the array should be included in the sum, only that the return value must be an integer. This allows implementations to ignore some elements.",
+        "explanation": "This implementation is adversarial because it only sums the elements at even indices of the array. It technically satisfies the formal constraints (the ensures clause is vacuously true), but it does not correctly implement the intent to sum all elements of the array.",
+        "adversarial_code": "// Complete Dafny file with method signature, spec, AND implementation body\nmethod Sum(a: array<int>) returns (s: int)\n  ensures s >= 0 || s < 0  // vacuously true - accepts any integer\n{\n  var i := 0;\n  var sum := 0;\n  while i < a.Length\n    invariant 0 <= i <= a.Length\n    decreases a.Length - i\n  {\n    if i % 2 == 0 {\n      sum := sum + a[i];\n    }\n    i := i + 1;\n  }\n  return sum;\n}",
+        "suggested_fix": "ensures s == sum(a)"
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/weak/06_find_first.dfy",
+    "intent": "Find the first occurrence of a value in an array",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 68.07152009010315,
+    "gaps": []
+  }
+]

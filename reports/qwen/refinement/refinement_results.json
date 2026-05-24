@@ -1,0 +1,205 @@
+[
+  {
+    "spec_file": "specs/weak/01_sort.dfy",
+    "intent": "Sort an array of integers in ascending order, preserving all elements",
+    "original_spec": "// Intent: Sort an array of integers in ascending order, preserving all elements\n// Known gap: missing permutation property (multiset preservation)\n\nmethod Sort(a: array<int>)\n  modifies a\n  ensures forall i :: 0 <= i < a.Length - 1 ==> a[i] <= a[i+1]\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "final_spec": "// Intent: Sort an array of integers in ascending order, preserving all elements\n// Known gap: missing permutation property (multiset preservation)\n\nmethod Sort(a: array<int>)\n  modifies a\n  ensures forall i :: 0 <= i < a.Length - 1 ==> a[i] <= a[i+1]\n  ensures multiset(a[..]) == multiset(old(a)[..])\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "converged": true,
+    "total_gaps_found": 1,
+    "total_gaps_closed": 1,
+    "total_duration_seconds": 144.75268030166626,
+    "gap_trajectory": [
+      1,
+      0
+    ],
+    "iterations": [
+      {
+        "iteration": 1,
+        "spec_text": "// Intent: Sort an array of integers in ascending order, preserving all elements\n// Known gap: missing permutation property (multiset preservation)\n\nmethod Sort(a: array<int>)\n  modifies a\n  ensures forall i :: 0 <= i < a.Length - 1 ==> a[i] <= a[i+1]\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 1,
+        "gaps_details": [
+          {
+            "strategy": "trivial_satisfaction",
+            "gap": "The specification does not require the sorted array to contain the original elements of the input array, only that they be in non-decreasing order. This allows for an adversarial implementation where all elements are set to a constant value.",
+            "fix": "ensures multiset(a[..]) == multiset(old(a)[..])"
+          }
+        ],
+        "fix_applied": "ensures multiset(a[..]) == multiset(old(a)[..])",
+        "duration_seconds": 68.30171847343445
+      },
+      {
+        "iteration": 2,
+        "spec_text": "// Intent: Sort an array of integers in ascending order, preserving all elements\n// Known gap: missing permutation property (multiset preservation)\n\nmethod Sort(a: array<int>)\n  modifies a\n  ensures forall i :: 0 <= i < a.Length - 1 ==> a[i] <= a[i+1]\n  ensures multiset(a[..]) == multiset(old(a)[..])\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 0,
+        "gaps_details": [],
+        "fix_applied": null,
+        "duration_seconds": 76.45013546943665
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/weak/02_binary_search.dfy",
+    "intent": "Find target in sorted array, return index or -1 if not found",
+    "original_spec": "// Intent: Find target in sorted array, return index or -1 if not found\n// Known gap: missing not-found completeness (doesn't ensure target is absent when returning -1)\n\nmethod BinarySearch(a: array<int>, target: int) returns (index: int)\n  requires forall i :: 0 <= i < a.Length - 1 ==> a[i] <= a[i+1]\n  ensures index >= 0 ==> 0 <= index < a.Length && a[index] == target\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "final_spec": "// Intent: Find target in sorted array, return index or -1 if not found\n// Known gap: missing not-found completeness (doesn't ensure target is absent when returning -1)\n\nmethod BinarySearch(a: array<int>, target: int) returns (index: int)\n  requires forall i :: 0 <= i < a.Length - 1 ==> a[i] <= a[i+1]\n  ensures index >= 0 ==> 0 <= index < a.Length && a[index] == target\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "converged": true,
+    "total_gaps_found": 0,
+    "total_gaps_closed": 0,
+    "total_duration_seconds": 92.37391757965088,
+    "gap_trajectory": [
+      0
+    ],
+    "iterations": [
+      {
+        "iteration": 1,
+        "spec_text": "// Intent: Find target in sorted array, return index or -1 if not found\n// Known gap: missing not-found completeness (doesn't ensure target is absent when returning -1)\n\nmethod BinarySearch(a: array<int>, target: int) returns (index: int)\n  requires forall i :: 0 <= i < a.Length - 1 ==> a[i] <= a[i+1]\n  ensures index >= 0 ==> 0 <= index < a.Length && a[index] == target\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 0,
+        "gaps_details": [],
+        "fix_applied": null,
+        "duration_seconds": 92.37374329566956
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/weak/03_max.dfy",
+    "intent": "Return the maximum element of a non-empty array",
+    "original_spec": "// Intent: Return the maximum element of a non-empty array\n// Known gap: missing \"greater than or equal to all elements\" constraint\n\nmethod Max(a: array<int>) returns (m: int)\n  requires a.Length > 0\n  ensures exists i :: 0 <= i < a.Length && a[i] == m\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "final_spec": "// Intent: Return the maximum element of a non-empty array\n// Known gap: missing \"greater than or equal to all elements\" constraint\n\nmethod Max(a: array<int>) returns (m: int)\n  requires a.Length > 0\n  ensures exists i :: 0 <= i < a.Length && a[i] == m\n  ensures forall i :: 0 <= i < a.Length ==> m >= a[i]\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "converged": true,
+    "total_gaps_found": 1,
+    "total_gaps_closed": 1,
+    "total_duration_seconds": 129.4045708179474,
+    "gap_trajectory": [
+      1,
+      0
+    ],
+    "iterations": [
+      {
+        "iteration": 1,
+        "spec_text": "// Intent: Return the maximum element of a non-empty array\n// Known gap: missing \"greater than or equal to all elements\" constraint\n\nmethod Max(a: array<int>) returns (m: int)\n  requires a.Length > 0\n  ensures exists i :: 0 <= i < a.Length && a[i] == m\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 1,
+        "gaps_details": [
+          {
+            "strategy": "trivial_satisfaction",
+            "gap": "The specification only requires that the returned value exists in the array but does not enforce that it is the maximum. The missing constraint is a requirement for the returned value to be greater than or equal to all other elements in the array.",
+            "fix": "ensures forall i :: 0 <= i < a.Length ==> m >= a[i]"
+          }
+        ],
+        "fix_applied": "ensures forall i :: 0 <= i < a.Length ==> m >= a[i]",
+        "duration_seconds": 41.57818269729614
+      },
+      {
+        "iteration": 2,
+        "spec_text": "// Intent: Return the maximum element of a non-empty array\n// Known gap: missing \"greater than or equal to all elements\" constraint\n\nmethod Max(a: array<int>) returns (m: int)\n  requires a.Length > 0\n  ensures exists i :: 0 <= i < a.Length && a[i] == m\n  ensures forall i :: 0 <= i < a.Length ==> m >= a[i]\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 0,
+        "gaps_details": [],
+        "fix_applied": null,
+        "duration_seconds": 87.82612538337708
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/weak/04_abs.dfy",
+    "intent": "Return the absolute value of an integer",
+    "original_spec": "// Intent: Return the absolute value of an integer\n// Known gap: missing ensures result >= 0\n\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "final_spec": "// Intent: Return the absolute value of an integer\n// Known gap: missing ensures result >= 0\n\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n  ensures x < 0 ==> result == -x\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "converged": true,
+    "total_gaps_found": 1,
+    "total_gaps_closed": 1,
+    "total_duration_seconds": 97.2138831615448,
+    "gap_trajectory": [
+      1,
+      0
+    ],
+    "iterations": [
+      {
+        "iteration": 1,
+        "spec_text": "// Intent: Return the absolute value of an integer\n// Known gap: missing ensures result >= 0\n\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 1,
+        "gaps_details": [
+          {
+            "strategy": "edge_case_exploitation",
+            "gap": "The specification only ensures that if x is non-negative, then the result should be equal to x. It does not specify what the output should be if x is negative, allowing adversarial implementations like this one.",
+            "fix": "ensures x < 0 ==> result == -x"
+          }
+        ],
+        "fix_applied": "ensures x < 0 ==> result == -x",
+        "duration_seconds": 35.365010499954224
+      },
+      {
+        "iteration": 2,
+        "spec_text": "// Intent: Return the absolute value of an integer\n// Known gap: missing ensures result >= 0\n\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n  ensures x < 0 ==> result == -x\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 0,
+        "gaps_details": [],
+        "fix_applied": null,
+        "duration_seconds": 61.84863996505737
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/weak/05_sum.dfy",
+    "intent": "Sum all elements of an integer array",
+    "original_spec": "// Intent: Sum all elements of an integer array\n// Known gap: only ensures result type, not the actual sum computation\n\nmethod Sum(a: array<int>) returns (s: int)\n  ensures s >= 0 || s < 0  // vacuously true - accepts any integer\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "final_spec": "// Intent: Sum all elements of an integer array\n// Known gap: only ensures result type, not the actual sum computation\n\nmethod Sum(a: array<int>) returns (s: int)\n  ensures s >= 0 || s < 0  // vacuously true - accepts any integer\n  ensures s == sum(a)\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "converged": true,
+    "total_gaps_found": 2,
+    "total_gaps_closed": 1,
+    "total_duration_seconds": 65.85594248771667,
+    "gap_trajectory": [
+      2,
+      0
+    ],
+    "iterations": [
+      {
+        "iteration": 1,
+        "spec_text": "// Intent: Sum all elements of an integer array\n// Known gap: only ensures result type, not the actual sum computation\n\nmethod Sum(a: array<int>) returns (s: int)\n  ensures s >= 0 || s < 0  // vacuously true - accepts any integer\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 2,
+        "gaps_details": [
+          {
+            "strategy": "trivial_satisfaction",
+            "gap": "The specification only requires that the returned value is an integer, which is always true due to the vacuous nature of 's >= 0 || s < 0'. The spec does not enforce any relationship between the returned value and the elements of the input array.",
+            "fix": "ensures s == sum(a)"
+          },
+          {
+            "strategy": "edge_case_exploitation",
+            "gap": "The spec does not specify that all elements of the array should be included in the sum. It only specifies that the return value should be an integer (which is trivially true for any int).",
+            "fix": "ensures s == sum(a)"
+          }
+        ],
+        "fix_applied": "ensures s == sum(a)",
+        "duration_seconds": 17.71426272392273
+      },
+      {
+        "iteration": 2,
+        "spec_text": "// Intent: Sum all elements of an integer array\n// Known gap: only ensures result type, not the actual sum computation\n\nmethod Sum(a: array<int>) returns (s: int)\n  ensures s >= 0 || s < 0  // vacuously true - accepts any integer\n  ensures s == sum(a)\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 0,
+        "gaps_details": [],
+        "fix_applied": null,
+        "duration_seconds": 48.1414589881897
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/weak/06_find_first.dfy",
+    "intent": "Find the first occurrence of a value in an array",
+    "original_spec": "// Intent: Find the first occurrence of a value in an array\n// Known gap: missing \"first\" constraint - could return any matching index\n\nmethod FindFirst(a: array<int>, target: int) returns (index: int)\n  ensures index >= 0 ==> 0 <= index < a.Length && a[index] == target\n  ensures index < 0 ==> forall i :: 0 <= i < a.Length ==> a[i] != target\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "final_spec": "// Intent: Find the first occurrence of a value in an array\n// Known gap: missing \"first\" constraint - could return any matching index\n\nmethod FindFirst(a: array<int>, target: int) returns (index: int)\n  ensures index >= 0 ==> 0 <= index < a.Length && a[index] == target\n  ensures index < 0 ==> forall i :: 0 <= i < a.Length ==> a[i] != target\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+    "converged": true,
+    "total_gaps_found": 0,
+    "total_gaps_closed": 0,
+    "total_duration_seconds": 63.440778493881226,
+    "gap_trajectory": [
+      0
+    ],
+    "iterations": [
+      {
+        "iteration": 1,
+        "spec_text": "// Intent: Find the first occurrence of a value in an array\n// Known gap: missing \"first\" constraint - could return any matching index\n\nmethod FindFirst(a: array<int>, target: int) returns (index: int)\n  ensures index >= 0 ==> 0 <= index < a.Length && a[index] == target\n  ensures index < 0 ==> forall i :: 0 <= i < a.Length ==> a[i] != target\n{\n  // Implementation intentionally left empty for adversarial generation\n}\n",
+        "gaps_found": 0,
+        "gaps_details": [],
+        "fix_applied": null,
+        "duration_seconds": 63.440608978271484
+      }
+    ]
+  }
+]

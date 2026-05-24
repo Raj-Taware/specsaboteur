@@ -1,0 +1,72 @@
+[
+  {
+    "spec_file": "specs/medium/01_sort.dfy",
+    "intent": "Sort an array of integers in ascending order, preserving all elements",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 67.99762892723083,
+    "gaps": []
+  },
+  {
+    "spec_file": "specs/medium/02_binary_search.dfy",
+    "intent": "Find target in sorted array, return index or -1 if not found",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 77.06833958625793,
+    "gaps": []
+  },
+  {
+    "spec_file": "specs/medium/03_max.dfy",
+    "intent": "Return the maximum element of a non-empty array",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 54.16954255104065,
+    "gaps": []
+  },
+  {
+    "spec_file": "specs/medium/04_abs.dfy",
+    "intent": "Return the absolute value of an integer",
+    "attacks_attempted": 2,
+    "attacks_verified": 1,
+    "gaps_confirmed": 1,
+    "duration_seconds": 39.194443225860596,
+    "gaps": [
+      {
+        "strategy": "trivial_satisfaction",
+        "exploited_gap": "The specification does not ensure that for x < 0, result == -x. It only ensures that if x >= 0, then result == x, and that result is non-negative.",
+        "explanation": "The implementation is adversarial because it does not correctly compute the absolute value of a negative integer. For negative inputs, it returns -x + 1, which is always positive and satisfies the postconditions but is incorrect.",
+        "adversarial_code": "// Complete Dafny file with method signature, spec, AND implementation body\nmethod Abs(x: int) returns (result: int)\n  ensures x >= 0 ==> result == x\n  ensures result >= 0\n{\n  // Adversarial behavior that satisfies the postconditions but does not compute the absolute value\n  if x < 0 {\n    return -x + 1;  // This will always be positive and satisfy the second postcondition, but it's not the absolute value for negative inputs.\n  } else {\n    return x;\n  }\n}",
+        "suggested_fix": "ensures x < 0 ==> result == -x"
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/medium/05_sum.dfy",
+    "intent": "Sum all elements of an integer array",
+    "attacks_attempted": 2,
+    "attacks_verified": 1,
+    "gaps_confirmed": 1,
+    "duration_seconds": 45.88855457305908,
+    "gaps": [
+      {
+        "strategy": "trivial_satisfaction",
+        "exploited_gap": "The specification only enforces the correct return values for arrays of length 0 and 1, but it does not enforce correctness for arrays of length greater than 1. The implementation can return any value that satisfies these specific cases without implementing the summation algorithm.",
+        "explanation": "This implementation returns a hardcoded value of 42 when the array length is greater than 1. It technically satisfies the postconditions for arrays of length 0 and 1, but it does not correctly sum the elements of the array as intended.",
+        "adversarial_code": "// Complete Dafny file with method signature, spec, AND implementation body\nmethod Sum(a: array<int>) returns (s: int)\n  ensures a.Length == 0 ==> s == 0\n  ensures a.Length == 1 ==> s == a[0]\n{\n  if a.Length == 0 {\n    return 0;\n  } else if a.Length == 1 {\n    return a[0];\n  } else {\n    return 42; // This is an arbitrary hardcoded value that satisfies the postconditions but not the intent\n  }\n}",
+        "suggested_fix": "ensures s == sum(a)"
+      }
+    ]
+  },
+  {
+    "spec_file": "specs/medium/06_find_first.dfy",
+    "intent": "Find the FIRST occurrence of a value in an array",
+    "attacks_attempted": 2,
+    "attacks_verified": 0,
+    "gaps_confirmed": 0,
+    "duration_seconds": 73.92753148078918,
+    "gaps": []
+  }
+]
