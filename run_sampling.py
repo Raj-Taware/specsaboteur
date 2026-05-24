@@ -30,7 +30,7 @@ for spec in specs:
             result = saboteur.attack_spec(spec)
             spec_trials.append({
                 "trial": trial,
-                "gaps_found": result.gaps_confirmed,
+                "gaps_found": result.attacks_adversarial,
                 "strategies": [g.strategy for g in result.gaps],
                 "duration": round(time.time() - start, 1),
             })
