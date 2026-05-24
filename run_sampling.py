@@ -3,7 +3,7 @@
 import sys, os, json, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.llm_client import LLMClient
+from src.llm_client import create_client
 from src.software_spec import load_all_software_specs
 from src.software_pipeline import SoftwareSaboteur
 
@@ -15,7 +15,7 @@ specs_dir = os.environ.get("SPECS", "specs/software_weak")
 
 os.makedirs(output_dir, exist_ok=True)
 
-llm = LLMClient(provider=provider, model=model)
+llm = create_client(provider=provider, model=model)
 specs = load_all_software_specs(specs_dir)
 print(f"Sampling {len(specs)} specs x {n_trials} trials")
 

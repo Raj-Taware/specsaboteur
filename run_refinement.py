@@ -3,7 +3,7 @@
 import sys, os, glob
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.llm_client import LLMClient
+from src.llm_client import create_client
 from src.dafny_bridge import DafnyBridge
 from src.refinement import IterativeRefiner, save_refinement_results
 
@@ -11,7 +11,7 @@ provider = os.environ.get("PROVIDER", "ollama")
 model = os.environ.get("MODEL", "qwen2.5-coder:32b-instruct-q4_K_M")
 output_dir = os.environ.get("OUTPUT", "reports/qwen/refinement")
 
-llm = LLMClient(provider=provider, model=model)
+llm = create_client(provider=provider, model=model)
 dafny = DafnyBridge()
 
 refiner = IterativeRefiner(llm_client=llm, dafny_bridge=dafny, max_iterations=5)
