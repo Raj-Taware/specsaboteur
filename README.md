@@ -113,17 +113,17 @@ Adversarial implementations verified by the Dafny theorem prover — **mathemati
 | Tier | Specs | Gaps Found | Details |
 |------|:-----:|:----------:|---------|
 | **Weak** | 4 | 1 | REST API: empty response satisfies "returns users array" |
-| **Medium** | 4 | 2 | REST API: empty response + token bypass (any Bearer string accepted) |
-| **Strong** | 4 | 0 | No gaps — detailed specs resist adversarial generation |
+| **Medium** | 4 | 2 | REST API + Solidity reentrancy gap |
+| **Strong** | 4 | 2 | REST API + Solidity gaps persist (LLM judge less discriminating) |
 
 ### Combined Results Summary
 
 | | Weak | Medium | Strong |
 |---|:---:|:---:|:---:|
-| **Layer 1 (Dafny)** | **8 gaps** (100%) | **4 gaps** (80%) | **0 gaps** (0%) |
-| **Layer 2 (Software)** | 1 gap | 2 gaps | 0 gaps |
+| **Layer 1 (Dafny)** | **8 gaps** (67%) | **4 gaps** (33%) | **0 gaps** (0%) |
+| **Layer 2 (Software)** | 1 gap | 2 gaps | 2 gaps |
 
-**Monotonic gradient confirmed across both layers:** weaker specs produce more gaps, stronger specs resist attack. SpecSaboteur functions as a **spec strength metric**.
+**Layer 1 monotonic gradient confirmed:** weaker specs produce more gaps, stronger specs resist attack. Layer 2 shows LLM-as-Judge limitations: strong-tier software specs still admit adversarial impls (REST API + Solidity). SpecSaboteur functions as both a **spec strength metric** and a **judge-quality diagnostic**.
 
 ### Iterative Refinement: Attack → Fix → Converge
 
@@ -141,16 +141,16 @@ The core demo: weak specs are iteratively strengthened through adversarial feedb
 
 ### Gap Taxonomy
 
-All 17 discovered gaps are automatically categorized into a structured taxonomy:
+All 12 discovered gaps are automatically categorized into a structured taxonomy:
 
 | Category | Count | Severity | Description |
 |----------|:-----:|----------|-------------|
-| Missing Negative Case | 5 | Medium | Spec handles positive case but not negative |
-| Token Bypass | 4 | Critical | Auth spec accepts any token without validation |
 | Missing Preservation | 3 | Critical | Input elements not preserved in output |
-| Missing Completeness | 2 | High | Method not required to find existing results |
+| Missing Reentrancy Guard | 2 | Critical | No protection against reentrant state changes |
 | Tautological Constraint | 1 | Critical | Postcondition constrains nothing |
-| Missing Base Case | 1 | High | Only base cases constrained, not general case |
+| Missing Negative Case | 2 | Medium | Spec handles positive case but not negative |
+| Missing Bound | 1 | Medium | Bound not tied to input domain |
+| Uncategorized (API-specific) | 3 | Medium | Domain-specific gaps (REST API, auth) |
 
 This taxonomy serves as training data for future spec-repair models (see [Future Work](#future-work)).
 
@@ -322,7 +322,7 @@ SpecSaboteur's gap taxonomy produces structured (spec, gap, fix) tuples — trai
 2. **Fine-tune** a model on (weak_spec, gap_description, strengthened_spec) examples
 3. **Deploy as spec linter** — flag likely gaps at write-time using learned patterns
 
-This inverts the current approach: instead of attacking specs post-hoc, prevent gaps during authoring. Not implemented due to compute constraints — the 17-entry taxonomy produced here is a proof of concept. Scaling to DafnyBench's 782 programs would produce a dataset sufficient for fine-tuning.
+This inverts the current approach: instead of attacking specs post-hoc, prevent gaps during authoring. Not implemented due to compute constraints — the 12-entry taxonomy produced here is a proof of concept. Scaling to DafnyBench's 782 programs would produce a dataset sufficient for fine-tuning.
 
 ### Other Directions
 
