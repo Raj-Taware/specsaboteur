@@ -205,7 +205,46 @@ def main():
         "modulo verifier correctness) but incomplete (LLM creativity bounds gap discovery)."
     )
 
-    pdf.section_title("1.2 Complementarity with Atlas IDE", level=2)
+    pdf.section_title("1.2 The Elegance of the Duality", level=2)
+    pdf.body_text(
+        "The CEGIS-dual framing is not merely an analogy -- it is a precise structural inversion "
+        "that inherits CEGIS's convergence properties while operating on the complementary object. "
+        "Consider the symmetry:"
+    )
+    pdf.body_text(
+        "CEGIS loop: Synthesize candidate impl A -> Verify A |= S -> "
+        "If counterexample found, refine A -> Repeat.\n"
+        "CEGIS-Dual loop: Synthesize adversarial impl A* -> Verify A* |= S -> "
+        "If A* violates intent I, refine S -> Repeat.", bold=True
+    )
+    pdf.body_text(
+        "The objects swap roles: in CEGIS, the spec is fixed and the implementation converges; "
+        "in CEGIS-Dual, the implementation is the probe and the specification converges. "
+        "The verifier serves the same function in both -- as an oracle that separates the search "
+        "space. But the refinement target rotates 180 degrees."
+    )
+    pdf.body_text(
+        "This duality reveals a deep asymmetry in formal methods: we have mature tools to check "
+        "'does A satisfy S?' but almost none to check 'is S worth satisfying?' The entire verification "
+        "enterprise assumes spec adequacy. SpecSaboteur makes that assumption testable."
+    )
+    pdf.body_text(
+        "Crucially, the duality also imports convergence intuition. Just as CEGIS terminates when "
+        "no counterexample exists in a finite domain, CEGIS-Dual terminates when no adversarial "
+        "implementation can verify -- meaning the spec has closed every exploitable gap the "
+        "adversary (LLM + strategy) can find. Our empirical result (convergence in <=2 iterations "
+        "across all 6 Dafny specs) suggests that specifications, like implementations, have a "
+        "finite attack surface that adversarial pressure can exhaust."
+    )
+    pdf.body_text(
+        "The elegance extends further: the gap taxonomy produced by CEGIS-Dual (Section 4.5) is "
+        "the specification-domain analogue of the counterexample traces produced by CEGIS. Just as "
+        "counterexample traces guide implementation repair, gap descriptions guide specification "
+        "repair. The same feedback structure, the same convergence mechanism, the same "
+        "termination condition -- applied to the dual problem."
+    )
+
+    pdf.section_title("1.3 Complementarity with Atlas IDE", level=2)
     pdf.body_text(
         "Atlas's formal-specification-ide [6] helps developers write and annotate specifications with "
         "scoring feedback. SpecSaboteur complements this as a validation layer: Atlas helps write specs, "
@@ -213,7 +252,7 @@ def main():
         "developers see adversarial attacks on their specs in real-time, closing gaps before code generation."
     )
 
-    pdf.section_title("1.3 Related Work", level=2)
+    pdf.section_title("1.4 Related Work", level=2)
     related = [
         ("Mutation testing", "Syntactic spec mutations; misses semantic gaps"),
         ("Property-based testing", "Tests impl against spec (wrong direction)"),

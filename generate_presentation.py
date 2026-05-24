@@ -163,9 +163,11 @@ def main():
         "If a WRONG implementation can VERIFY against your spec,\nyour spec has a gap. Find it. Fix it. Repeat.",
         22, WHITE, bold=True, align=PP_ALIGN.CENTER)
 
-    add_text_box(slide, 0.8, 5.5, 11.5, 1,
-        "First tool that generates adversarial implementations verified against formal specs to find semantic gaps.",
-        16, PURPLE, align=PP_ALIGN.CENTER)
+    add_text_box(slide, 0.8, 5.2, 11.5, 1.5,
+        "Same verifier. Same convergence structure. Same termination condition.\n"
+        "The objects swap: spec is fixed in CEGIS, impl is the probe in CEGIS-Dual.\n"
+        "Gap taxonomy = spec-domain analogue of counterexample traces.",
+        14, PURPLE, align=PP_ALIGN.CENTER)
 
     # ===== SLIDE 4: HOW IT WORKS =====
     slide = prs.slides.add_slide(prs.slide_layouts[6])

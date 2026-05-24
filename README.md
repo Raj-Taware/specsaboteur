@@ -303,6 +303,8 @@ Authentication:
 - **Formal Methods:** The dual of [CEGIS](https://en.wikipedia.org/wiki/Counterexample-guided_abstraction_refinement) — adversarial implementations refine specifications, not implementations
 - **AI Safety:** [Specification gaming](https://deepmind.google/discover/blog/specification-gaming-the-flip-side-of-ai-ingenuity/) applied to formal program specifications rather than reward functions
 
+**The elegance of the duality:** The structural inversion is precise. In CEGIS, the spec is fixed and the implementation converges toward correctness. In CEGIS-Dual, the implementation is a disposable probe and the *specification* converges toward adequacy. The verifier serves the same role in both — as an oracle separating the search space — but the refinement target rotates 180°. The gap taxonomy is the spec-domain analogue of counterexample traces: same feedback structure, same convergence mechanism, applied to the dual problem. Our empirical convergence (≤2 iterations across all specs) suggests specifications have a finite attack surface that adversarial pressure can exhaust.
+
 **Relation to Atlas Computing's work:** Atlas's [formal-specification-ide](https://github.com/atlas-computing-org/formal-specification-ide) helps write and annotate specs. SpecSaboteur validates them. Together they close the spec lifecycle: write → validate → strengthen → verify.
 
 ## Limitations
