@@ -157,8 +157,8 @@ def main():
     pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(50, 50, 50)
     pdf.multi_cell(pdf.w - 70, 4.5,
-        "30 spec instances | 60 attacks | 12 confirmed gaps | "
-        "Monotonic gradient: weak 33% > medium 17% > strong 8% | "
+        "14 unique specs across 3 tiers | 12 confirmed gaps | "
+        "L1 monotonic gradient: weak 33% > medium 17% > strong 8% | "
         "6/6 Dafny specs converge in <=2 refinement iterations | "
         "12 gap patterns across 6 categories | Zero API cost",
         align="C")
@@ -384,10 +384,11 @@ def main():
     )
 
     pdf.body_text(
-        "Both layers show the expected monotonic gradient: weaker specs yield more gaps. "
-        "This validates sensitivity (finds real gaps) and specificity (fewer findings on strong specs). "
-        "The gradient also serves as a sanity check: if strong specs had more gaps than weak, the tool "
-        "would be unreliable."
+        "Layer 1 (Dafny) shows the expected monotonic gradient: weak 33% > medium 17% > strong 8%. "
+        "This validates sensitivity and specificity with formal verification as ground truth. "
+        "Layer 2 (LLM-as-Judge) shows an inverted pattern: strong specs paradoxically yield more gaps "
+        "than weak. This reveals a limitation of LLM-based judging: the judge's discrimination degrades "
+        "on longer, more complex specs. Layer 2 results should be interpreted as directional, not definitive."
     )
 
     # 4.2 Showcase
@@ -483,10 +484,10 @@ def main():
     # 4.5 Taxonomy
     pdf.section_title("4.5 Gap Taxonomy", level=2)
     if taxonomy and "categories" in taxonomy:
-        tax_widths = [42, 18, 22, 58]
+        tax_widths = [42, 16, 20, 72]
         pdf.table_row(["Category", "Count", "Severity", "Description"], tax_widths, bold=True, fill=True)
         for cat, info in taxonomy.get("categories", {}).items():
-            desc = info.get("description", "")[:50]
+            desc = info.get("description", "")[:80]
             pdf.table_row([cat.replace("_", " "), info["count"], info.get("severity", ""), desc], tax_widths)
         pdf.ln(3)
 
@@ -595,8 +596,8 @@ def main():
     pdf.section_title("8. Conclusion")
     pdf.body_text(
         "SpecSaboteur demonstrates that adversarial implementation synthesis is a practical, effective, "
-        "and novel approach to specification validation. The monotonic gradient across spec strength tiers "
-        "validates both sensitivity and specificity. The iterative refinement loop achieves convergence "
+        "and novel approach to specification validation. The monotonic gradient across Dafny spec strength "
+        "tiers validates both sensitivity and specificity. The iterative refinement loop achieves convergence "
         "in two iterations or fewer, showing that adversarial pressure systematically strengthens "
         "specifications. The extension to real-world software specifications demonstrates generalizability "
         "beyond formal methods. With a working two-layer pipeline, demonstrated convergence, and a "
